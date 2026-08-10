@@ -1,0 +1,459 @@
+<!DOCTYPE html>
+<html lang="ko" data-theme="light" data-density="student">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>백지 디자인 시스템 v1</title>
+<style>
+/* ═══════════ 1. 색 토큰 ═══════════ */
+:root{
+  color-scheme: light;
+  --paper:#FBF9F4;          /* 종이 — 페이지 바탕 */
+  --card:#FFFEFB;           /* 카드 표면 */
+  --sunk:#F3F1EA;           /* 눌린 면 · 입력 배경 */
+  --ink-1:#16150F;          /* 본문 (17.4:1) */
+  --ink-2:#4E4C43;          /* 보조 (8.2:1) */
+  --ink-3:#8A877B;          /* 약함 (3.4:1 · 큰 글씨/UI 전용) */
+  --rule:#E6E3DA;           /* 격자선 */
+  --edge:#C9C5B8;           /* 테두리·축 */
+  --border:rgba(22,21,15,.11);
+
+  --s1:#2A6FD4;  --s1-ink:#2A6FD4;   /* 풀기 · 계산 (4.62) */
+  --s2:#E2652C;  --s2-ink:#B44A18;   /* 알기 · 의미 (5.07) */
+  --s3:#12A07A;  --s3-ink:#0B7757;   /* 설명하기 (5.27) */
+  --good:#0E8F3C; --good-ink:#0B7A32;
+  --warn:#E0A21C; --warn-ink:#9A6604;
+  --crit:#C93A34; --crit-ink:#C93A34;
+
+  --w1:rgba(42,111,212,.10); --w2:rgba(226,101,44,.10); --w3:rgba(18,160,122,.11);
+  --wg:rgba(14,143,60,.11);  --ww:rgba(224,162,28,.14); --wc:rgba(201,58,52,.10);
+  --shadow:0 1px 2px rgba(22,21,15,.05), 0 10px 28px -14px rgba(22,21,15,.14);
+}
+:root[data-theme="dark"]{
+  color-scheme: dark;
+  --paper:#111009; --card:#191814; --sunk:#221F19;
+  --ink-1:#FFFFFF; --ink-2:#C8C4B6; --ink-3:#8A877B;
+  --rule:#2E2C26; --edge:#3E3B33; --border:rgba(255,255,255,.12);
+  --s1:#3D84E0; --s1-ink:#3D84E0;
+  --s2:#D1571F; --s2-ink:#E4703C;
+  --s3:#159E78; --s3-ink:#159E78;
+  --good:#2FB558; --good-ink:#2FB558;
+  --warn:#E0A21C; --warn-ink:#E0A21C;
+  --crit:#E2564F; --crit-ink:#E2564F;
+  --w1:rgba(61,132,224,.16); --w2:rgba(209,87,31,.18); --w3:rgba(21,158,120,.16);
+  --wg:rgba(47,181,88,.15);  --ww:rgba(224,162,28,.16); --wc:rgba(226,86,79,.15);
+  --shadow:0 1px 2px rgba(0,0,0,.35), 0 10px 28px -14px rgba(0,0,0,.7);
+}
+
+/* ═══════════ 2. 밀도 토큰 (두 모드) ═══════════ */
+:root[data-density="student"]{
+  --fs-micro:13.5px; --fs-body:17px; --fs-lead:18px; --fs-h3:17px; --fs-h2:22px; --fs-h1:31px;
+  --lh:1.82; --radius:18px; --radius-sm:13px; --pad:22px; --gap:14px;
+  --touch:48px; --touch-sm:44px; --btn-pad:14px 24px; --track:12px;
+}
+:root[data-density="teacher"]{
+  --fs-micro:12.5px; --fs-body:15px; --fs-lead:15.5px; --fs-h3:15px; --fs-h2:18px; --fs-h1:27px;
+  --lh:1.68; --radius:13px; --radius-sm:9px; --pad:18px; --gap:10px;
+  --touch:40px; --touch-sm:36px; --btn-pad:10px 18px; --track:9px;
+}
+
+*{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink-1);
+  font-family:system-ui,-apple-system,"Segoe UI","Apple SD Gothic Neo","Malgun Gothic",sans-serif;
+  font-size:var(--fs-body); line-height:var(--lh); -webkit-font-smoothing:antialiased;
+  transition:font-size .2s}
+.wrap{max-width:1080px;margin:0 auto;padding:0 20px 100px}
+
+header{position:sticky;top:0;z-index:30;background:color-mix(in srgb,var(--card) 92%,transparent);
+  backdrop-filter:blur(10px);border-bottom:1px solid var(--border)}
+.hd{max-width:1080px;margin:0 auto;padding:12px 20px;display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+.hd .nm{font-weight:750;letter-spacing:-.03em;font-size:19px}
+.hd .sub{font-size:12.5px;color:var(--ink-3)}
+.seg{display:flex;background:var(--sunk);border-radius:99px;padding:3px;margin-left:auto;gap:2px}
+.seg button{border:none;background:none;font:inherit;font-size:var(--fs-micro);font-weight:640;
+  padding:0 16px;min-height:var(--touch-sm);border-radius:99px;cursor:pointer;color:var(--ink-2)}
+.seg button[aria-pressed="true"]{background:var(--card);color:var(--ink-1);box-shadow:var(--shadow)}
+.ib{border:1px solid var(--border);background:none;border-radius:99px;min-height:var(--touch-sm);
+  padding:0 14px;font:inherit;font-size:var(--fs-micro);cursor:pointer;color:var(--ink-2)}
+
+h1{font-size:var(--fs-h1);letter-spacing:-.035em;margin:34px 0 6px;font-weight:740;line-height:1.25}
+h2{font-size:var(--fs-h2);letter-spacing:-.02em;margin:42px 0 6px;font-weight:690;line-height:1.35}
+h3{font-size:var(--fs-h3);margin:26px 0 8px;font-weight:680;letter-spacing:-.01em}
+.lead{color:var(--ink-2);font-size:var(--fs-lead);margin:0 0 6px;max-width:66ch}
+.small{font-size:var(--fs-micro);color:var(--ink-3);line-height:1.6}
+.card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow)}
+.pad{padding:var(--pad)}
+.grid{display:grid;gap:var(--gap)}
+.g2{grid-template-columns:repeat(auto-fit,minmax(280px,1fr))}
+.g3{grid-template-columns:repeat(auto-fit,minmax(210px,1fr))}
+.row{display:flex;gap:var(--gap);align-items:center;flex-wrap:wrap}
+
+/* ═══════════ 3. 컴포넌트 ═══════════ */
+.btn{background:var(--ink-1);color:var(--card);border:none;border-radius:calc(var(--radius-sm) - 1px);
+  padding:var(--btn-pad);min-height:var(--touch);font:inherit;font-weight:650;cursor:pointer;
+  transition:transform .12s}
+.btn:active{transform:scale(.98)}
+.btn.ghost{background:none;border:1.5px solid var(--edge);color:var(--ink-1);font-weight:580}
+.btn.key{background:var(--s1);color:#fff}
+.btn:disabled{background:var(--rule);color:var(--ink-3);cursor:not-allowed}
+.field{width:100%;background:var(--sunk);border:1.5px solid var(--edge);border-radius:var(--radius-sm);
+  padding:12px 14px;min-height:var(--touch);font:inherit;color:var(--ink-1)}
+.field:focus{outline:3px solid var(--s1);outline-offset:-1px;border-color:transparent}
+
+.tag{display:inline-block;font-size:var(--fs-micro);font-weight:700;padding:3px 11px;border-radius:99px}
+.tag.a{background:var(--w1);color:var(--s1-ink)} .tag.b{background:var(--w2);color:var(--s2-ink)}
+.tag.c{background:var(--w3);color:var(--s3-ink)} .tag.d{background:var(--sunk);color:var(--ink-2)}
+
+/* 슬롯 카드 — 4상태 */
+.slot{border:1.5px solid var(--border);border-radius:var(--radius-sm);padding:12px 15px;background:var(--sunk)}
+.slot .top{display:flex;align-items:center;gap:9px}
+.slot .dot{width:9px;height:9px;border-radius:99px;background:var(--edge);flex:none}
+.slot .nm{font-weight:650;font-size:calc(var(--fs-body) - 1px)}
+.slot .sub{font-size:var(--fs-micro);color:var(--ink-3);margin-top:3px}
+.slot.full{background:var(--card);border-color:var(--s1);box-shadow:0 0 0 3px var(--w1)}
+.slot.full .dot{background:var(--s1)}
+.slot.full .sub{color:var(--s1-ink);font-weight:580}
+.slot.part{background:var(--card);border-color:var(--warn);box-shadow:0 0 0 3px var(--ww)}
+.slot.part .dot{background:var(--warn)}
+.slot.part .sub{color:var(--warn-ink);font-weight:580}
+@keyframes pop{0%{transform:scale(.92);opacity:0}60%{transform:scale(1.03)}100%{transform:scale(1);opacity:1}}
+.slot.just{animation:pop .4s cubic-bezier(.2,.8,.3,1)}
+
+/* 문항 카드 */
+.q{border:1.5px solid var(--border);border-left-width:4px;border-radius:var(--radius-sm);
+  padding:13px 16px;background:var(--card)}
+.q.pass{border-left-color:var(--good)} .q.fail{border-left-color:var(--crit)}
+.q .qh{display:flex;align-items:center;gap:9px;margin-bottom:6px}
+.q .mark{margin-left:auto;font-size:var(--fs-micro);font-weight:750}
+.q.pass .mark{color:var(--good-ink)} .q.fail .mark{color:var(--crit-ink)}
+.q .qq{font-weight:640;margin-bottom:8px}
+.q .said{font-size:calc(var(--fs-body) - 1.5px);color:var(--ink-2);padding-left:12px;border-left:2px solid var(--rule)}
+
+/* 커버리지 막대 */
+.cov{display:grid;gap:11px}
+.covrow{display:grid;grid-template-columns:auto 1fr auto;gap:12px;align-items:center}
+.covrow .k{font-size:var(--fs-micro);font-weight:640;color:var(--ink-2);min-width:64px}
+.track{height:var(--track);border-radius:99px;background:var(--rule);overflow:hidden}
+.track i{display:block;height:100%;border-radius:99px;transition:width .5s cubic-bezier(.2,.8,.3,1)}
+.covrow .v{font-size:var(--fs-micro);font-weight:700;font-variant-numeric:tabular-nums;min-width:40px;text-align:right}
+
+/* 배너 */
+.banner{border-radius:var(--radius);padding:16px 20px;border:1.5px solid var(--border);background:var(--card)}
+.banner .big{font-weight:720;font-size:calc(var(--fs-body) + 2px);letter-spacing:-.02em}
+.banner p{margin:6px 0 0;color:var(--ink-2);font-size:calc(var(--fs-body) - 1.5px)}
+.banner.alert{background:var(--w2);border-color:rgba(226,101,44,.35)}
+.banner.win{background:var(--wg);border-color:rgba(14,143,60,.35)}
+.banner.warn{background:var(--ww);border-color:rgba(224,162,28,.45)}
+
+/* 말풍선 */
+.bubble{background:var(--sunk);border:1px solid var(--border);border-radius:5px var(--radius) var(--radius) var(--radius);
+  padding:13px 16px;flex:1}
+.bubble .who{display:block;font-size:11.5px;font-weight:730;letter-spacing:.03em;color:var(--ink-3);margin-bottom:3px}
+.ava{width:74px;height:74px;flex:none;border-radius:22px;background:var(--sunk);border:1px solid var(--border);
+  display:grid;place-items:center}
+.ava.happy{background:var(--wg);border-color:rgba(14,143,60,.35)}
+.ava.think{background:var(--w1);border-color:rgba(42,111,212,.35)}
+.ava.confused{background:var(--wc);border-color:rgba(201,58,52,.35)}
+.ava.proud{background:var(--w3);border-color:rgba(18,160,122,.35)}
+
+table{width:100%;border-collapse:collapse;font-size:calc(var(--fs-body) - 1.5px);margin-top:10px}
+th,td{text-align:left;padding:9px 12px;border-bottom:1px solid var(--rule);vertical-align:top}
+th{font-size:var(--fs-micro);color:var(--ink-2);font-weight:650}
+code{background:var(--sunk);padding:1px 6px;border-radius:5px;font-size:.88em;
+  font-family:ui-monospace,SFMono-Regular,Menlo,monospace}
+.swatch{border-radius:var(--radius-sm);border:1px solid var(--border);overflow:hidden;background:var(--card)}
+.swatch .chip{height:64px}
+.swatch .meta{padding:9px 12px;font-size:var(--fs-micro);line-height:1.5}
+.swatch .meta b{display:block;font-size:calc(var(--fs-micro) + .5px)}
+.swatch .meta span{color:var(--ink-3);font-variant-numeric:tabular-nums}
+.pass{color:var(--good-ink);font-weight:680}
+.note{border-left:3px solid var(--s2);padding:2px 0 2px 15px;margin:16px 0;color:var(--ink-2);
+  font-size:calc(var(--fs-body) - 1px)}
+ul.t{margin:8px 0;padding-left:20px} ul.t li{margin:6px 0;color:var(--ink-2)}
+.den{font-size:var(--fs-micro);color:var(--ink-3);border:1px dashed var(--edge);border-radius:99px;padding:2px 10px;display:inline-block}
+.only-s{display:none} :root[data-density="student"] .only-s{display:inline}
+.only-t{display:none} :root[data-density="teacher"] .only-t{display:inline}
+</style>
+</head>
+<body>
+
+<header><div class="hd">
+  <div><div class="nm">백지</div><div class="sub">디자인 시스템 v1</div></div>
+  <div class="seg" role="group" aria-label="밀도 모드">
+    <button id="mS" aria-pressed="true">학생 모드</button>
+    <button id="mT" aria-pressed="false">교사·심사자 모드</button>
+  </div>
+  <button class="ib" id="theme">◐ 다크</button>
+</div></header>
+
+<div class="wrap">
+
+<h1>같은 시스템, 두 개의 밀도</h1>
+<p class="lead">
+  위 토글을 눌러 보세요. <b>색과 구조는 그대로 두고 밀도·글자 크기·모서리·터치 영역만</b> 바뀝니다.
+  화면을 두 벌 만드는 게 아니라 <b>토큰 한 세트를 갈아 끼우는</b> 방식입니다.
+</p>
+
+<h2>0. 원칙 다섯</h2>
+<div class="card pad">
+  <ul class="t">
+    <li><b>태블릿이 기준이다.</b> 학교 보급 기기는 대부분 태블릿·크롬북이다. 최소 터치 영역 <b>48px</b>(학생) / 40px(교사), hover에만 의존하는 정보는 만들지 않는다.</li>
+    <li><b>색은 눈으로 고르지 않는다.</b> 모든 계열색은 색각 이상 분리도·대비 검증기를 통과한 값만 쓴다. 아래 3번에 검증 결과를 함께 적어 둔다.</li>
+    <li><b>상태는 색 하나로 말하지 않는다.</b> 통과/실패/절반은 <b>색 + 글자 + 위치</b> 세 채널로 동시에 표시한다.</li>
+    <li><b>학생에게는 지표가 아니라 장면을 준다.</b> 같은 데이터라도 학생 모드는 문장과 그림으로, 교사 모드는 수치와 표로.</li>
+    <li><b>종이의 감촉을 유지한다.</b> 순백 대신 따뜻한 오프화이트, 짙은 먹색 잉크. 이 프로젝트의 이름이 「백지」인 이유를 화면이 배신하지 않게.</li>
+  </ul>
+</div>
+
+<h2>1. 두 모드 — 무엇이 달라지나</h2>
+<div class="card pad" style="overflow-x:auto">
+  <table>
+    <thead><tr><th>토큰</th><th>학생 모드</th><th>교사·심사자 모드</th></tr></thead>
+    <tbody>
+      <tr><td><code>--fs-body</code></td><td>17px</td><td>15px</td></tr>
+      <tr><td><code>--lh</code></td><td>1.82</td><td>1.68</td></tr>
+      <tr><td><code>--radius</code></td><td>18px</td><td>13px</td></tr>
+      <tr><td><code>--pad</code></td><td>22px</td><td>18px</td></tr>
+      <tr><td><code>--touch</code> (주 조작)</td><td><b>48px</b></td><td>40px</td></tr>
+      <tr><td><code>--touch-sm</code> (헤더·칩)</td><td>44px</td><td>36px</td></tr>
+      <tr><td><code>--track</code> (막대 두께)</td><td>12px</td><td>9px</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<h3>말 바꾸기 사전</h3>
+<p class="lead">모드가 바뀌면 <b>용어도 함께 바뀐다.</b> 초등학생 어휘에 ‘커버리지’와 ‘회귀’는 없다.</p>
+<div class="card pad" style="overflow-x:auto">
+  <table>
+    <thead><tr><th>교사·심사자 모드</th><th>학생 모드</th></tr></thead>
+    <tbody>
+      <tr><td>이해 커버리지</td><td>제자가 풀 수 있는 문제</td></tr>
+      <tr><td>계산 / 의미 / 설명</td><td>풀기 / 알기 / 설명하기</td></tr>
+      <tr><td>지식 슬롯</td><td>제자가 배운 것</td></tr>
+      <tr><td>부분 이해 (partial)</td><td>반쯤 알아들었어요</td></tr>
+      <tr><td>회귀 발생 — C3, C5 실패</td><td>어? 전에 풀던 걸 못 풀겠어요</td></tr>
+      <tr><td>커밋 로그 · v4</td><td>수업 일기 · 네 번째 수업</td></tr>
+      <tr><td>추출기 판정 · 근거 인용</td><td>제가 이렇게 알아들었어요</td></tr>
+    </tbody>
+  </table>
+</div>
+<div class="note">
+  이 표가 이 시스템에서 가장 실무적인 부분입니다. 색과 간격은 토큰으로 자동이지만
+  <b>말은 사람이 두 벌 써야</b> 합니다. 문구를 코드에 박지 말고 <code>{teacher, student}</code> 쌍으로 분리해 두세요.
+</div>
+
+<h2>2. 타이포</h2>
+<div class="card pad">
+  <div class="den">현재 밀도에 맞춰 실시간으로 바뀝니다</div>
+  <h1 style="margin:14px 0 4px">제자에게 분수 나눗셈을 가르쳐 주세요</h1>
+  <h2 style="margin:14px 0 4px">시험지 — 네 번째 수업</h2>
+  <h3 style="margin:14px 0 4px">제자의 머릿속</h3>
+  <p class="lead" style="margin-top:10px">
+    본문입니다. 한글은 라틴 문자보다 자간이 촘촘해 보이므로 행간을 넉넉히 둡니다.
+    학생 모드는 1.82, 교사 모드는 1.68.
+  </p>
+  <p class="small">보조 설명 — 출처, 단위, 각주에 씁니다.</p>
+</div>
+
+<h2>3. 색 — 검증을 통과한 값만</h2>
+<p class="lead">
+  계열색 3종은 색각 이상 분리도와 대비 검증을 <b>라이트·다크 양쪽에서 전 항목 통과</b>했습니다.
+  글씨에 쓰는 색과 면을 칠하는 색을 따로 둡니다 — 주황·청록은 면으로는 선명하지만 글씨로는 대비가 모자라기 때문입니다.
+</p>
+<h3>계열색 — 이해의 세 층</h3>
+<div class="grid g3">
+  <div class="swatch"><div class="chip" style="background:var(--s1)"></div>
+    <div class="meta"><b>풀기 · 계산</b><span>#2A6FD4 · 종이 대비 4.62</span></div></div>
+  <div class="swatch"><div class="chip" style="background:var(--s2)"></div>
+    <div class="meta"><b>알기 · 의미</b><span>#E2652C · 면 3.26 / 글씨 #B44A18 5.07</span></div></div>
+  <div class="swatch"><div class="chip" style="background:var(--s3)"></div>
+    <div class="meta"><b>설명하기</b><span>#12A07A · 면 3.15 / 글씨 #0B7757 5.27</span></div></div>
+</div>
+<p class="small" style="margin-top:10px">
+  <span class="pass">검증 통과</span> — 최악 인접쌍 색각 이상 ΔE 11.1(라이트) / 10.4(다크), 정상 시각 ΔE 26.4 / 26.0. 기준은 각각 8 / 15.
+</p>
+
+<h3>상태색</h3>
+<div class="grid g3">
+  <div class="swatch"><div class="chip" style="background:var(--good)"></div>
+    <div class="meta"><b>통과</b><span>#0E8F3C · 글씨 #0B7A32 5.19</span></div></div>
+  <div class="swatch"><div class="chip" style="background:var(--warn)"></div>
+    <div class="meta"><b>절반 · 주의</b><span>#E0A21C · 글씨 #9A6604 4.67</span></div></div>
+  <div class="swatch"><div class="chip" style="background:var(--crit)"></div>
+    <div class="meta"><b>실패 · 회귀</b><span>#C93A34 · 4.82</span></div></div>
+</div>
+
+<h3>종이와 잉크</h3>
+<div class="grid g3">
+  <div class="swatch"><div class="chip" style="background:var(--paper);border-bottom:1px solid var(--border)"></div>
+    <div class="meta"><b>종이</b><span>#FBF9F4 → 다크 #111009</span></div></div>
+  <div class="swatch"><div class="chip" style="background:var(--card);border-bottom:1px solid var(--border)"></div>
+    <div class="meta"><b>카드 표면</b><span>#FFFEFB → 다크 #191814</span></div></div>
+  <div class="swatch"><div class="chip" style="background:var(--ink-1)"></div>
+    <div class="meta"><b>잉크</b><span>#16150F · 대비 17.4</span></div></div>
+</div>
+
+<h2>4. 컴포넌트</h2>
+
+<h3>버튼 — 최소 높이는 터치 토큰을 따른다</h3>
+<div class="card pad row">
+  <button class="btn">가르치기</button>
+  <button class="btn key">시험 보내기</button>
+  <button class="btn ghost">다시 말할게요</button>
+  <button class="btn" disabled>가르치기</button>
+  <span class="small">현재 최소 높이 <b class="only-s">48px</b><b class="only-t">40px</b></span>
+</div>
+
+<h3>입력</h3>
+<div class="card pad">
+  <textarea class="field" rows="2" placeholder="예) 분수 나눗셈은 뒤집어서 곱하면 돼."></textarea>
+</div>
+
+<h3>제자 — 다섯 표정</h3>
+<div class="card pad">
+  <div class="grid g3">
+    <div class="row"><div class="ava" data-face="blank"></div><div><b>백지</b><div class="small">아무것도 모름</div></div></div>
+    <div class="row"><div class="ava think" data-face="think"></div><div><b>생각 중</b><div class="small">배운 것 적용</div></div></div>
+    <div class="row"><div class="ava happy" data-face="happy"></div><div><b>기쁨</b><div class="small">문항 통과</div></div></div>
+    <div class="row"><div class="ava confused" data-face="confused"></div><div><b>혼란</b><div class="small">회귀 · 못 알아들음</div></div></div>
+    <div class="row"><div class="ava proud" data-face="proud"></div><div><b>뿌듯</b><div class="small">전 문항 통과</div></div></div>
+  </div>
+  <div class="row" style="margin-top:18px;align-items:flex-start">
+    <div class="ava confused" data-face="confused"></div>
+    <div class="bubble"><span class="who">제자</span>
+      <span class="only-t">어… 선생님. 새로 배운 걸 적용했더니 <b>전에는 풀던 C3, C5번을 못 풀겠어요.</b></span>
+      <span class="only-s">어… 선생님. 방금 배운 대로 했더니 <b>아까는 풀었던 문제를 못 풀겠어요.</b></span>
+    </div>
+  </div>
+</div>
+
+<h3>슬롯 카드 — 네 상태</h3>
+<div class="card pad grid g2">
+  <div class="slot"><div class="top"><span class="dot"></span><span class="nm">나눗셈의 의미</span></div>
+    <div class="sub">나눗셈이 도대체 무슨 뜻인지</div></div>
+  <div class="slot part"><div class="top"><span class="dot"></span><span class="nm">답의 크기 감각</span></div>
+    <div class="sub">◐ 반쯤 알아들었어요 — ‘1보다 작은 수’라는 조건이 빠졌어요</div></div>
+  <div class="slot full"><div class="top"><span class="dot"></span><span class="nm">계산 절차</span></div>
+    <div class="sub">✓ 배웠어요</div></div>
+  <div class="slot full just"><div class="top"><span class="dot"></span><span class="nm">자연수 다루기</span></div>
+    <div class="sub">✓ 방금 배웠어요</div></div>
+</div>
+<p class="small" style="margin-top:8px">비어 있음 / 절반 / 채움 / 방금 채움. 방금 채움은 0.4초 팝 애니메이션으로만 구분하고 <b>색은 채움과 같게</b> 둡니다 — 상태를 다섯 가지로 늘리지 않기 위해서.</p>
+
+<h3>문항 카드</h3>
+<div class="card pad grid g2">
+  <div class="q pass"><div class="qh"><span class="tag a">풀기</span><span class="mark">통과</span></div>
+    <div class="qq">6 ÷ ½</div>
+    <div class="said">6 안에 ½이 12번 들어가요. 6 × 2 = 12</div></div>
+  <div class="q fail"><div class="qh"><span class="tag b">알기</span><span class="mark">실패</span></div>
+    <div class="qq">나눗셈인데 왜 답이 더 커졌나요?</div>
+    <div class="said">나눗셈은 똑같이 나눠 주는 거니까 작아져야 하는데… <b>저도 모르겠어요.</b></div></div>
+</div>
+<p class="small" style="margin-top:8px">통과/실패는 <b>왼쪽 굵은 선 + 글자</b> 두 채널로 표시합니다. 색만으로 구분하지 않습니다.</p>
+
+<h3>커버리지 막대</h3>
+<div class="card pad">
+  <div class="cov">
+    <div class="covrow"><span class="k"><span class="only-t">계산</span><span class="only-s">풀기</span></span>
+      <span class="track"><i style="width:100%;background:var(--s1)"></i></span><span class="v">5/5</span></div>
+    <div class="covrow"><span class="k"><span class="only-t">의미</span><span class="only-s">알기</span></span>
+      <span class="track"><i style="width:0%;background:var(--s2)"></i></span><span class="v">0/3</span></div>
+    <div class="covrow"><span class="k"><span class="only-t">설명</span><span class="only-s">설명하기</span></span>
+      <span class="track"><i style="width:0%;background:var(--s3)"></i></span><span class="v">0/2</span></div>
+  </div>
+</div>
+
+<h3>배너 — 장면을 전달하는 자리</h3>
+<div class="card pad grid" style="gap:12px">
+  <div class="banner alert">
+    <div class="big"><span class="only-t">계산 <span style="color:var(--s1-ink)">100%</span> · 의미 <span style="color:var(--s2-ink)">0%</span> · 설명 <span style="color:var(--s3-ink)">0%</span></span>
+      <span class="only-s">계산은 다 맞았는데, <span style="color:var(--s2-ink)">왜 그런지는 하나도 몰라요</span></span></div>
+    <p><span class="only-t">제자는 계산 다섯 문제를 다 맞히면서 분수 나눗셈이 무슨 뜻인지 거의 모릅니다. 시험지가 계산만 물었다면 이 아이는 만점입니다.</span>
+       <span class="only-s">제자가 문제는 다 풀었어요. 그런데 “왜 그렇게 되는지” 물으면 하나도 대답을 못 해요. 무엇을 더 알려줘야 할까요?</span></p>
+  </div>
+  <div class="banner warn">
+    <div class="big"><span class="only-t">전에 맞던 C3, C5번이 깨졌습니다</span><span class="only-s">어? 아까는 풀던 문제를 못 풀어요</span></div>
+    <p><span class="only-t">불완전한 개념은 아무것도 모르는 것보다 나쁠 수 있습니다.</span>
+       <span class="only-s">방금 알려준 게 틀린 건 아니에요. 다만 <b>반쪽짜리</b>라서 제자가 헷갈린 거예요.</span></p>
+  </div>
+  <div class="banner win">
+    <div class="big">10문항 전부 통과</div>
+    <p><span class="only-t">계산·의미·설명이 모두 채워졌습니다.</span><span class="only-s">제자가 이제 혼자서도 다 할 수 있어요!</span></p>
+  </div>
+</div>
+<div class="note">
+  회귀 배너는 <b>빨강이 아니라 노랑</b>입니다. 학생이 틀린 게 아니라 <b>설명이 반쪽</b>이었을 뿐이고,
+  빨강은 “네가 망쳤다”로 읽히기 때문입니다. 이 프로젝트에서 회귀는 실패가 아니라 통찰의 순간이어야 합니다.
+</div>
+
+<h2>5. 태블릿 레이아웃 규칙</h2>
+<div class="card pad">
+  <table>
+    <thead><tr><th>폭</th><th>기기</th><th>레이아웃</th></tr></thead>
+    <tbody>
+      <tr><td>&lt; 880px</td><td>태블릿 세로 · 폰</td><td><b>1단.</b> 제자 → 입력 → 슬롯 → 시험지 순서로 세로 흐름. 슬롯은 접힘 가능</td></tr>
+      <tr><td>880 ~ 1023px</td><td>태블릿 가로 (기준)</td><td><b>2단.</b> 왼쪽 제자+입력 : 오른쪽 슬롯+커버리지 = 6 : 4</td></tr>
+      <tr><td>≥ 1024px</td><td>데스크톱</td><td>2단 유지 + 최대 폭 1080px로 고정. 넓히지 않는다</td></tr>
+    </tbody>
+  </table>
+  <ul class="t" style="margin-top:14px">
+    <li><b>시험지는 항상 전체 폭</b>을 쓴다. 문항 카드 최소 폭 280px, 자동 줄바꿈.</li>
+    <li><b>스크롤은 페이지 하나만.</b> 내부 스크롤 영역(수업 기록 등)은 태블릿에서 손가락 충돌을 일으키므로 세로 모드에서는 펼침으로 전환.</li>
+    <li><b>키보드가 올라오면</b> 입력창이 가려지지 않도록 입력 영역을 화면 상단 1/3 안에 둔다.</li>
+  </ul>
+</div>
+
+<h2>6. 적용 순서</h2>
+<div class="card pad">
+  <ul class="t">
+    <li><b>1. (완료)</b> <code>:root</code> 토큰 블록을 백지에 이식 — 기존 변수명은 별칭으로 남겨 무손실 교체</li>
+    <li><b>2. (완료)</b> 문구를 <code>tw(교사, 학생)</code> 쌍으로 분리하고 헤더에 모드 토글 추가.
+        학생 모드에서는 ‘이해 이력’·‘이 프로젝트에 대하여’ 탭과 AI 설정을 감춘다</li>
+    <li><b>3. (완료)</b> 레이아웃을 태블릿 기준으로 재배치 — 2단 전환점 <b>880px</b>,
+        768 세로는 1단. 터치 영역 학생 48/44px · 교사 40/36px 검증 완료</li>
+    <li><b>4. (완료)</b> 제자를 <b>한 장의 백지</b> 캐릭터로 재설계 — 표정 5종, 눈 깜빡임,
+        <b>배운 슬롯 수만큼 종이에 연필 자국이 쌓이는</b> 성장 표현</li>
+    <li><b>4-1. (완료)</b> 학생 모드 온보딩 3박자 — 만나기 → 첫 가르침 → 첫 시험 → 전체 화면 공개</li>
+    <li><b>5.</b> 학생 1~2명에게 실제로 태블릿으로 쥐여 주고 관찰</li>
+    
+  </ul>
+</div>
+
+</div>
+
+<script>
+function face(state){
+  const eye=(x,y)=>`<circle cx="${x}" cy="${y}" r="2.5" fill="var(--ink-1)"/>`;
+  let e,m,x="";
+  if(state==="blank"){ e=eye(20,25)+eye(36,25); m=`<path d="M21,38 h14" stroke="var(--ink-1)" stroke-width="2.3" stroke-linecap="round" fill="none"/>`; }
+  else if(state==="think"){ e=eye(20,22)+eye(36,22); m=`<path d="M22,38 q6,-3 12,0" stroke="var(--ink-1)" stroke-width="2.3" stroke-linecap="round" fill="none"/>`;
+    x=`<circle cx="46" cy="12" r="2.2" fill="var(--s1)"/><circle cx="51" cy="7" r="1.5" fill="var(--s1)" opacity=".6"/>`; }
+  else if(state==="happy"){ e=`<path d="M16,25 q4,-4.5 8,0" stroke="var(--ink-1)" stroke-width="2.3" fill="none" stroke-linecap="round"/><path d="M32,25 q4,-4.5 8,0" stroke="var(--ink-1)" stroke-width="2.3" fill="none" stroke-linecap="round"/>`;
+    m=`<path d="M20,36 q8,7 16,0" stroke="var(--ink-1)" stroke-width="2.3" fill="none" stroke-linecap="round"/>`; }
+  else if(state==="proud"){ e=`<path d="M16,25 q4,-4.5 8,0" stroke="var(--ink-1)" stroke-width="2.3" fill="none" stroke-linecap="round"/><path d="M32,25 q4,-4.5 8,0" stroke="var(--ink-1)" stroke-width="2.3" fill="none" stroke-linecap="round"/>`;
+    m=`<path d="M19,35 q9,9 18,0" stroke="var(--ink-1)" stroke-width="2.3" fill="none" stroke-linecap="round"/>`;
+    x=`<path d="M9,20 l4,-2 M47,20 l-4,-2" stroke="var(--s3)" stroke-width="2.2" stroke-linecap="round"/>`; }
+  else { e=eye(20,26)+eye(36,26);
+    m=`<path d="M20,39 q4,-4 8,0 q4,4 8,0" stroke="var(--ink-1)" stroke-width="2.3" fill="none" stroke-linecap="round"/>`;
+    x=`<path d="M14,18 l8,-3 M42,18 l-8,-3" stroke="var(--ink-1)" stroke-width="2.1" stroke-linecap="round"/>`; }
+  return `<svg viewBox="0 0 56 52" width="50" height="46" aria-hidden="true">
+    <path d="M28,3 c13,0 21,9 21,21 c0,12 -8,22 -21,22 c-13,0 -21,-10 -21,-22 c0,-12 8,-21 21,-21z"
+      fill="var(--card)" stroke="var(--ink-1)" stroke-width="2.2"/>
+    <path d="M18,7 q10,-6 20,0" stroke="var(--ink-1)" stroke-width="2.2" fill="none" stroke-linecap="round"/>
+    ${e}${m}${x}</svg>`;
+}
+document.querySelectorAll("[data-face]").forEach(el=> el.innerHTML = face(el.dataset.face));
+const root=document.documentElement;
+function setMode(m){ root.setAttribute("data-density",m);
+  document.getElementById("mS").setAttribute("aria-pressed",String(m==="student"));
+  document.getElementById("mT").setAttribute("aria-pressed",String(m==="teacher")); }
+document.getElementById("mS").onclick=()=>setMode("student");
+document.getElementById("mT").onclick=()=>setMode("teacher");
+document.getElementById("theme").onclick=()=>{
+  const d=root.getAttribute("data-theme")==="dark";
+  root.setAttribute("data-theme", d?"light":"dark");
+  document.getElementById("theme").textContent = d?"◐ 다크":"◑ 라이트";
+};
+</script>
+</body>
+</html>

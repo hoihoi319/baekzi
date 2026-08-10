@@ -1,0 +1,1991 @@
+<!DOCTYPE html>
+<html lang="ko" data-theme="light" data-density="student">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>백지 — 내가 가르친 것만 아는 AI 제자</title>
+<style>
+:root{
+  color-scheme: light;
+  /* ── 종이와 잉크 ── */
+  --paper:#FBF9F4; --card:#FFFEFB; --sunk:#F3F1EA;
+  --ink-1:#16150F; --ink-2:#4E4C43; --ink-3:#8A877B;
+  --rule:#E6E3DA; --edge:#C9C5B8; --border:rgba(22,21,15,.11);
+  /* ── 계열색: 면 / 글씨 분리 ── */
+  --s1:#2A6FD4; --s1-ink:#2A6FD4;
+  --s2:#E2652C; --s2-ink:#B44A18;
+  --s3:#12A07A; --s3-ink:#0B7757;
+  --good:#0E8F3C; --good-ink:#0B7A32;
+  --warn:#E0A21C; --warn-ink:#9A6604;
+  --crit:#C93A34; --crit-ink:#C93A34;
+  --w1:rgba(42,111,212,.10); --w2:rgba(226,101,44,.10); --w3:rgba(18,160,122,.11);
+  --wg:rgba(14,143,60,.11);  --ww:rgba(224,162,28,.14); --wc:rgba(201,58,52,.10);
+  --shadow:0 1px 2px rgba(22,21,15,.05), 0 10px 28px -14px rgba(22,21,15,.14);
+  /* ── 별칭 (기존 이름 유지) ── */
+  --plane:var(--paper); --surface:var(--card); --surface-2:var(--sunk);
+  --grid:var(--rule); --axis:var(--edge);
+}
+:root[data-theme="dark"]{
+  color-scheme: dark;
+  --paper:#111009; --card:#191814; --sunk:#221F19;
+  --ink-1:#FFFFFF; --ink-2:#C8C4B6; --ink-3:#8A877B;
+  --rule:#2E2C26; --edge:#3E3B33; --border:rgba(255,255,255,.12);
+  --s1:#3D84E0; --s1-ink:#3D84E0;
+  --s2:#D1571F; --s2-ink:#E4703C;
+  --s3:#159E78; --s3-ink:#159E78;
+  --good:#2FB558; --good-ink:#2FB558;
+  --warn:#E0A21C; --warn-ink:#E0A21C;
+  --crit:#E2564F; --crit-ink:#E2564F;
+  --w1:rgba(61,132,224,.16); --w2:rgba(209,87,31,.18); --w3:rgba(21,158,120,.16);
+  --wg:rgba(47,181,88,.15);  --ww:rgba(224,162,28,.16); --wc:rgba(226,86,79,.15);
+  --shadow:0 1px 2px rgba(0,0,0,.35), 0 10px 28px -14px rgba(0,0,0,.7);
+}
+/* ── 밀도 토큰 ── */
+:root[data-density="student"]{
+  --fs-micro:13.5px; --fs-body:17px; --fs-lead:18px; --fs-h3:17px; --fs-h2:22px; --fs-h1:31px;
+  --lh:1.82; --radius:18px; --radius-sm:13px; --pad:22px; --gap:14px;
+  --touch:48px; --touch-sm:44px; --btn-pad:14px 24px; --track:12px; --ava-w:86px;
+}
+:root[data-density="teacher"]{
+  --fs-micro:12.5px; --fs-body:15px; --fs-lead:15.5px; --fs-h3:15px; --fs-h2:18px; --fs-h1:27px;
+  --lh:1.68; --radius:13px; --radius-sm:9px; --pad:18px; --gap:10px;
+  --touch:40px; --touch-sm:36px; --btn-pad:10px 18px; --track:9px; --ava-w:72px;
+}
+*{box-sizing:border-box}
+/* 키보드 포커스 — 마우스에는 안 뜨고 Tab 이동에만 뜬다 */
+:focus-visible{outline:3px solid var(--s1);outline-offset:2px;border-radius:8px}
+.btn:focus-visible,.ib:focus-visible,nav button:focus-visible,.seg button:focus-visible,
+.cbtn:focus-visible,.exchip:focus-visible,.lnk:focus-visible{outline:3px solid var(--s1);outline-offset:3px}
+textarea:focus-visible,.setup input:focus-visible,.setup select:focus-visible{outline-offset:-1px}
+.skip{position:absolute;left:-9999px;top:0;z-index:60;background:var(--ink-1);color:var(--card);
+  padding:12px 18px;border-radius:0 0 12px 0;font-weight:650}
+.skip:focus{left:0}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--paper);color:var(--ink-1);
+  font-family:system-ui,-apple-system,"Segoe UI","Apple SD Gothic Neo","Malgun Gothic",sans-serif;
+  font-size:var(--fs-body);line-height:var(--lh);-webkit-font-smoothing:antialiased}
+.wrap{max-width:1080px;margin:0 auto;padding:0 20px 100px}
+
+header{position:sticky;top:0;z-index:40;background:color-mix(in srgb,var(--surface) 90%,transparent);
+  backdrop-filter:blur(12px);border-bottom:1px solid var(--border)}
+.hd{max-width:1180px;margin:0 auto;padding:13px 22px;display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.logo{display:flex;align-items:baseline;gap:9px}
+.logo b{font-size:19px;letter-spacing:-.03em;font-weight:750}
+.logo span{font-size:12.5px;color:var(--ink-3)}
+nav{display:flex;gap:2px;margin-left:auto;flex-wrap:wrap}
+nav button{background:none;border:none;padding:0 15px;min-height:var(--touch-sm);border-radius:99px;
+  cursor:pointer;color:var(--ink-2);font:inherit;font-size:var(--fs-micro);font-weight:620;transition:.15s}
+nav button:hover{background:var(--surface-2)}
+nav button[aria-selected=true]{background:var(--ink-1);color:var(--card);font-weight:660}
+.ib{background:none;border:1px solid var(--border);border-radius:99px;min-height:var(--touch-sm);
+  padding:0 14px;cursor:pointer;color:var(--ink-2);font:inherit;font-size:var(--fs-micro);transition:.15s}
+.ib:hover{background:var(--surface-2);color:var(--ink-1)}
+
+h1{font-size:var(--fs-h1);letter-spacing:-.035em;margin:30px 0 6px;font-weight:740;line-height:1.25}
+h2{font-size:var(--fs-h2);letter-spacing:-.02em;margin:36px 0 6px;font-weight:690;line-height:1.35}
+h3{font-size:var(--fs-h3);letter-spacing:-.01em;margin:0 0 10px;font-weight:680;color:var(--ink-2)}
+#tab-about h3{font-size:16px;color:var(--ink-1);margin-bottom:4px}
+.lead{color:var(--ink-2);font-size:var(--fs-lead);margin:0 0 4px;max-width:66ch}
+.muted{color:var(--ink-3);font-size:var(--fs-micro);line-height:1.6}
+.hide{display:none !important}
+.card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow)}
+.pad{padding:var(--pad)}
+
+/* concept picker */
+.picker{display:flex;gap:8px;flex-wrap:wrap;margin:18px 0 4px}
+.seg{display:flex;background:var(--sunk);border-radius:99px;padding:3px;gap:2px}
+.seg button{border:none;background:none;font:inherit;font-size:var(--fs-micro);font-weight:640;padding:0 14px;min-height:var(--touch-sm);border-radius:99px;cursor:pointer;color:var(--ink-2)}
+.seg button[aria-pressed="true"]{background:var(--card);color:var(--ink-1);box-shadow:var(--shadow)}
+:root[data-density="student"] .t-only{display:none !important}
+.lnk{background:none;border:none;padding:6px 8px;font:inherit;font-size:var(--fs-micro);
+  color:var(--ink-3);text-decoration:underline;cursor:pointer}
+.exchip{background:var(--sunk);border:1.5px dashed var(--edge);border-radius:99px;
+  padding:9px 16px;min-height:var(--touch-sm);font:inherit;font-size:calc(var(--fs-body) - 2px);
+  color:var(--ink-1);cursor:pointer;text-align:left}
+.exchip:active{transform:scale(.98)}
+@keyframes reveal{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+.revealed{animation:reveal .45s cubic-bezier(.2,.8,.3,1)}
+#obHint{font-size:var(--fs-micro);color:var(--s1-ink);font-weight:640}
+#testOut{margin-top:14px;border-radius:var(--radius-sm);padding:12px 15px;font-size:calc(var(--fs-body) - 1.5px);
+  border:1.5px solid var(--border);background:var(--sunk);line-height:1.65}
+#testOut.ok{background:var(--wg);border-color:rgba(14,143,60,.4);color:var(--good-ink)}
+#testOut.bad{background:var(--wc);border-color:rgba(201,58,52,.4);color:var(--ink-1)}
+#testOut b{font-weight:700}
+#testOut .why{display:block;margin-top:6px;color:var(--ink-2);font-size:var(--fs-micro)}
+:root[data-density="teacher"] #covTitleS{display:none}
+:root[data-density="teacher"] #leadS{display:none}
+:root[data-density="teacher"] #slotHintS{display:none}
+:root[data-density="teacher"] #resetS{display:none}
+.cbtn{border:1.5px solid var(--border);background:var(--card);border-radius:var(--radius-sm);
+  padding:11px 16px;min-height:var(--touch);cursor:pointer;font:inherit;text-align:left;
+  transition:.16s;min-width:168px;flex:1 1 168px}
+.cbtn:hover{border-color:var(--axis)}
+.cbtn[aria-current=true]{border-color:var(--ink-1);box-shadow:0 0 0 2px var(--ink-1) inset}
+.cbtn .cn{display:block;font-weight:660;font-size:14.5px;letter-spacing:-.01em}
+.cbtn .cg{display:block;font-size:11.5px;color:var(--ink-3);margin-top:1px}
+.cbtn .cp{display:flex;align-items:center;gap:6px;margin-top:7px}
+.cbtn .cp span{font-size:11.5px;color:var(--ink-2);font-variant-numeric:tabular-nums;min-width:34px}
+.cbtn .cp .bar{flex:1;height:5px}
+
+.stage{display:grid;grid-template-columns:1fr;gap:var(--gap);align-items:start;margin-top:16px}
+@media(min-width:880px){ .stage{grid-template-columns:6fr 4fr;gap:18px} }
+.stage.ob{grid-template-columns:1fr !important}
+.stage.ob #colL{max-width:640px;margin:0 auto;width:100%}
+@media(max-width:879px){ #tape{max-height:none !important;overflow:visible !important} }
+
+.pupil{display:flex;gap:16px;align-items:flex-start}
+.avatar{width:var(--ava-w);height:calc(var(--ava-w) * 1.2);flex:none;border-radius:16px;
+  background:var(--sunk);border:1px solid var(--border);display:grid;place-items:center;
+  padding:6px;transition:.3s}
+.avatar.big{--ava-w:118px}
+@keyframes blink{0%,93%,100%{transform:scaleY(1)} 96%{transform:scaleY(.08)}}
+.pface .blinky{transform-box:fill-box;transform-origin:center;animation:blink 6.5s infinite}
+@media (prefers-reduced-motion: reduce){ .pface .blinky{animation:none} }
+.avatar.confused{background:var(--wc);border-color:rgba(208,59,59,.3)}
+.avatar.happy{background:var(--wg);border-color:rgba(12,163,12,.3)}
+.avatar.think{background:var(--w1);border-color:rgba(42,120,214,.3)}
+.bubble{background:var(--sunk);border:1px solid var(--border);border-radius:5px var(--radius) var(--radius) var(--radius);
+  padding:14px 17px;font-size:var(--fs-body);flex:1;min-width:0}
+.bubble .nm{display:block;font-size:11.5px;font-weight:720;letter-spacing:.03em;color:var(--ink-3);margin-bottom:3px}
+
+textarea,.setup input,.setup select{width:100%;background:var(--sunk);border:1.5px solid var(--edge);
+  border-radius:var(--radius-sm);padding:12px 14px;min-height:var(--touch);font:inherit;color:var(--ink-1);
+  resize:vertical;line-height:1.7}
+textarea:focus,.setup input:focus,.setup select:focus{outline:3px solid var(--s1);outline-offset:-1px;border-color:transparent}
+.row{display:flex;gap:var(--gap);align-items:center;flex-wrap:wrap}
+.btn{background:var(--ink-1);color:var(--card);border:none;border-radius:calc(var(--radius-sm) - 1px);
+  padding:var(--btn-pad);min-height:var(--touch);font:inherit;font-weight:650;cursor:pointer;transition:transform .12s}
+.btn:active{transform:scale(.98)}
+.btn:disabled{background:var(--grid);color:var(--ink-3);cursor:not-allowed;transform:none}
+.btn.ghost{background:none;border:1.5px solid var(--edge);color:var(--ink-1);font-weight:580}
+.btn.ghost:hover{background:var(--surface-2)}
+
+.slots{display:flex;flex-direction:column;gap:8px}
+.slot{border:1.5px solid var(--border);border-radius:var(--radius-sm);padding:12px 15px;background:var(--sunk);transition:.25s}
+.slot.on{background:var(--surface);border-color:var(--s1);box-shadow:0 0 0 3px var(--w1)}
+.slot .top{display:flex;align-items:center;gap:8px}
+.dot{width:8px;height:8px;border-radius:99px;background:var(--axis);flex:none;transition:.25s}
+.slot.on .dot{background:var(--s1)}
+.slot .nm{font-size:13.5px;font-weight:640}
+.slot .hint{font-size:12.5px;color:var(--ink-3);margin-top:2px;line-height:1.5}
+.slot .got{font-size:12.5px;color:var(--s1);margin-top:5px;font-weight:560}
+.chips{display:flex;gap:5px;margin-top:6px;flex-wrap:wrap}
+.chip{font-size:var(--fs-micro);padding:3px 10px;border-radius:99px;background:var(--w1);color:var(--s1-ink);font-weight:640}
+.chip.off{background:var(--surface-2);color:var(--ink-3);border:1px dashed var(--axis)}
+@keyframes pop{0%{transform:scale(.9);opacity:0}60%{transform:scale(1.03)}100%{transform:scale(1);opacity:1}}
+.slot.just{animation:pop .38s cubic-bezier(.2,.8,.3,1)}
+
+.cov{display:grid;gap:11px}
+.covrow{display:grid;grid-template-columns:52px 1fr 46px;gap:11px;align-items:center}
+.covrow .k{font-size:12.5px;color:var(--ink-2);font-weight:600}
+.bar{height:var(--track);border-radius:99px;background:var(--rule);overflow:hidden;display:block}
+.bar i{display:block;height:100%;border-radius:99px;transition:width .5s cubic-bezier(.2,.8,.3,1)}
+.covrow .v{font-size:13px;font-variant-numeric:tabular-nums;text-align:right;font-weight:640}
+
+.qgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:var(--gap);margin-top:12px}
+.q{border:1.5px solid var(--border);border-left-width:4px;border-radius:var(--radius-sm);padding:13px 16px;
+  background:var(--card);opacity:0;transform:translateY(6px);transition:.35s}
+.q.in{opacity:1;transform:none}
+.q.pass{border-left-color:var(--good)}
+.q.fail{border-left-color:var(--crit)}
+.q .qh{display:flex;align-items:center;gap:8px;margin-bottom:6px}
+.q .kind{font-size:var(--fs-micro);font-weight:700;letter-spacing:.02em;padding:3px 10px;border-radius:99px}
+.kind.calc{background:var(--w1);color:var(--s1)} .kind.meaning{background:var(--w2);color:var(--s2-ink)}
+.kind.explain{background:var(--w3);color:var(--s3-ink)}
+.q .mark{margin-left:auto;font-size:var(--fs-micro);font-weight:750}
+.q.pass .mark{color:var(--good-ink)} .q.fail .mark{color:var(--crit-ink)}
+.q .qq{font-size:var(--fs-body);font-weight:640;letter-spacing:-.01em;margin-bottom:9px}
+.q .said{font-size:calc(var(--fs-body) - 1.5px);color:var(--ink-2);padding-left:12px;border-left:2px solid var(--rule)}
+
+.headline{border-radius:var(--radius);padding:18px 22px;margin-top:20px;border:1.5px solid var(--border);background:var(--card)}
+.headline .big{font-size:19px;font-weight:700;letter-spacing:-.025em}
+.headline p{margin:7px 0 0;color:var(--ink-2);font-size:14.5px}
+.headline.alert{background:var(--ww);border-color:rgba(224,162,28,.45)}
+.headline.win{background:var(--wg);border-color:rgba(14,143,60,.35)}
+
+.ver{border:1px solid var(--border);border-radius:14px;background:var(--surface);padding:15px 18px;margin-top:11px}
+.ver .vh{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.vtag{font-size:12px;font-weight:750;padding:3px 10px;border-radius:8px;background:var(--ink-1);
+  color:var(--surface);font-variant-numeric:tabular-nums}
+.diff{display:flex;flex-direction:column;gap:4px;margin-top:10px;font-size:13px}
+.diff div{padding:4px 10px;border-radius:7px}
+.diff .add{background:var(--wg);color:var(--good-ink);font-weight:600}
+.diff .brk{background:var(--wc);color:var(--crit-ink);font-weight:600}
+.diff .fix{background:var(--w1);color:var(--s1-ink);font-weight:600}
+.minicov{display:flex;gap:5px;margin-top:11px}
+.minicov > div{flex:1}
+.minicov .lb{font-size:11px;color:var(--ink-3);margin-bottom:3px}
+
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(268px,1fr));gap:12px;margin-top:14px}
+.mini{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:16px 18px}
+.mini h4{margin:9px 0 7px;font-size:15px;letter-spacing:-.015em}
+.mini p{margin:0;font-size:13.5px;color:var(--ink-2)}
+.cite{font-size:12px;color:var(--ink-3);margin-top:8px;padding-top:8px;border-top:1px solid var(--grid)}
+.tag{display:inline-block;font-size:var(--fs-micro);padding:3px 10px;border-radius:99px;font-weight:700;letter-spacing:.02em}
+.tag.a{background:var(--w1);color:var(--s1)} .tag.b{background:var(--w2);color:var(--s2-ink)}
+.tag.c{background:var(--w3);color:var(--s3-ink)} .tag.d{background:var(--surface-2);color:var(--ink-2)}
+ul.t{margin:9px 0;padding-left:19px} ul.t li{margin:5px 0;color:var(--ink-2);font-size:14px}
+.quote{border-left:3px solid var(--s2);padding:3px 0 3px 15px;margin:16px 0;color:var(--ink-2);font-size:14.5px}
+table{width:100%;border-collapse:collapse;font-size:13.5px;margin-top:10px}
+th,td{text-align:left;padding:8px 11px;border-bottom:1px solid var(--grid);vertical-align:top}
+th{color:var(--ink-2);font-weight:640;font-size:12.5px}
+.num{text-align:right}
+td.num,th.num{text-align:right;font-variant-numeric:tabular-nums}
+
+/* ── AI 연결 ── */
+.badge{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:640;
+  padding:5px 11px;border-radius:99px;border:1px solid var(--border);background:var(--surface-2);color:var(--ink-2)}
+.badge.on{background:var(--w1);border-color:rgba(42,120,214,.35);color:var(--s1)}
+.badge i{width:6px;height:6px;border-radius:99px;background:currentColor;display:block}
+.setup{margin-top:16px}
+.setup .grid{display:grid;grid-template-columns:150px 1fr;gap:10px;align-items:center}
+@media(max-width:640px){.setup .grid{grid-template-columns:1fr}}
+.setup label{font-size:13px;color:var(--ink-2);font-weight:600}
+.setup input,.setup select{width:100%;background:var(--plane);border:1px solid var(--axis);border-radius:10px;
+  padding:9px 12px;font:inherit;font-size:14px;color:var(--ink-1)}
+.setup input:focus,.setup select:focus{outline:2px solid var(--s1);outline-offset:-1px;border-color:transparent}
+.warn{font-size:12.5px;color:var(--ink-3);line-height:1.6;margin-top:12px;padding-top:12px;border-top:1px solid var(--grid)}
+
+.confirm{border:1px solid var(--s1);border-radius:14px;background:var(--surface);padding:16px 18px;margin-top:16px;
+  box-shadow:0 0 0 3px var(--w1)}
+.confirm h4{margin:0 0 4px;font-size:14.5px;letter-spacing:-.01em}
+.judge{border:1px solid var(--border);border-radius:11px;padding:10px 13px;margin-top:9px;background:var(--surface-2)}
+.judge.full{border-color:rgba(12,163,12,.4);background:var(--wg)}
+.judge.partial{border-color:rgba(250,178,25,.5);background:rgba(250,178,25,.10)}
+.judge .jt{display:flex;align-items:center;gap:8px;font-size:13.5px;font-weight:660}
+.judge .lv{font-size:11px;font-weight:700;padding:2px 8px;border-radius:99px;margin-left:auto}
+.judge.full .lv{background:var(--good);color:#fff}
+.judge.partial .lv{background:var(--warn);color:#3a2c00}
+.judge .qt{font-size:12.5px;color:var(--ink-2);margin-top:5px;padding-left:10px;border-left:2px solid var(--axis)}
+.judge .ms{font-size:12.5px;color:var(--ink-2);margin-top:5px}
+.vs{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px;font-size:12.5px;color:var(--ink-3);
+  padding-top:10px;border-top:1px dashed var(--axis)}
+.vs b{color:var(--ink-2)}
+.memo{border:1px dashed var(--axis);border-radius:11px;padding:9px 13px;margin-top:9px;
+  font-size:13px;color:var(--ink-2);background:var(--plane)}
+.memo b{color:var(--ink-1)}
+.slot.part{background:var(--surface);border-color:var(--warn);box-shadow:0 0 0 3px var(--ww)}
+.slot.part .dot{background:var(--warn)}
+.slot .half{font-size:var(--fs-micro);color:var(--warn-ink);margin-top:5px;font-weight:580}
+
+.chip.half{background:var(--ww);color:var(--warn-ink);border:1px solid rgba(224,162,28,.45)}
+
+@keyframes spin{to{transform:rotate(360deg)}}
+.lb2{font-size:11.5px;color:var(--ink-3);margin-bottom:2px}
+.spin{display:inline-block;width:13px;height:13px;border:2px solid var(--axis);border-top-color:var(--s1);
+  border-radius:99px;animation:spin .7s linear infinite;vertical-align:-2px;margin-right:6px}
+
+.frac{display:inline-block;vertical-align:-0.48em;text-align:center;line-height:1.08;
+  margin:0 3px;font-size:.8em;font-variant-numeric:tabular-nums}
+.frac i{display:block;font-style:normal;padding:0 2px}
+.frac i:first-child{border-bottom:1.4px solid currentColor;padding-bottom:1px;margin-bottom:1px}
+.q .qq,.q .said,.headline .big,td,.bubble{line-height:1.95}
+
+/* ── 2026 visual refresh: clear, calm, and student-friendly ── */
+:root{
+  --paper:#F4F6FC; --card:#FFFFFF; --sunk:#F1F3F9;
+  --ink-1:#18213C; --ink-2:#55617A; --ink-3:#8992A8;
+  --rule:#E7EAF2; --edge:#CFD5E3; --border:rgba(30,43,79,.10);
+  --s1:#5C5BD6; --s1-ink:#4C4BC1;
+  --s2:#F06A4A; --s2-ink:#C84B31;
+  --s3:#14A389; --s3-ink:#087A66;
+  --good:#1F9B64; --good-ink:#15774B;
+  --warn:#E7A526; --warn-ink:#98660B;
+  --crit:#DC4C5B; --crit-ink:#C43747;
+  --w1:rgba(92,91,214,.11); --w2:rgba(240,106,74,.11); --w3:rgba(20,163,137,.11);
+  --wg:rgba(31,155,100,.11); --ww:rgba(231,165,38,.14); --wc:rgba(220,76,91,.10);
+  --shadow:0 2px 4px rgba(24,33,60,.03),0 18px 45px -26px rgba(44,53,90,.35);
+}
+:root[data-theme="dark"]{
+  --paper:#111522; --card:#191F30; --sunk:#22293B;
+  --ink-1:#F8F9FD; --ink-2:#BEC5D7; --ink-3:#838DA6;
+  --rule:#2A3246; --edge:#39435B; --border:rgba(255,255,255,.10);
+  --s1:#8584F4; --s1-ink:#A3A2FF;
+  --s2:#FF8063; --s2-ink:#FF957D;
+  --s3:#35C4A8; --s3-ink:#50D8BC;
+  --good:#45C587; --good-ink:#5DD69A;
+  --warn:#F0B74B; --warn-ink:#F4C66C;
+  --crit:#F06A78; --crit-ink:#FF8692;
+  --w1:rgba(133,132,244,.15); --w2:rgba(255,128,99,.14); --w3:rgba(53,196,168,.14);
+  --wg:rgba(69,197,135,.13); --ww:rgba(240,183,75,.14); --wc:rgba(240,106,120,.13);
+  --shadow:0 16px 46px -28px rgba(0,0,0,.9);
+}
+:root[data-density="student"]{
+  --fs-micro:13px; --fs-body:16px; --fs-lead:17px; --fs-h3:16px; --fs-h2:22px; --fs-h1:32px;
+  --lh:1.72; --radius:20px; --radius-sm:13px; --pad:24px; --gap:14px;
+  --touch:48px; --touch-sm:42px; --btn-pad:13px 23px; --track:11px; --ava-w:86px;
+}
+body{
+  background:
+    radial-gradient(circle at 8% 6%,rgba(92,91,214,.09),transparent 24rem),
+    radial-gradient(circle at 96% 18%,rgba(20,163,137,.07),transparent 28rem),
+    var(--paper);
+  letter-spacing:-.006em;
+}
+body::before{
+  content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;opacity:.5;
+  background-image:radial-gradient(circle,rgba(92,91,214,.22) 1px,transparent 1.5px);
+  background-size:28px 28px;mask-image:linear-gradient(90deg,#000,transparent 32%,transparent 68%,#000);
+}
+.wrap{max-width:1160px;padding:0 28px 110px}
+header{
+  background:color-mix(in srgb,var(--card) 86%,transparent);
+  border-bottom:1px solid color-mix(in srgb,var(--s1) 9%,var(--border));
+  box-shadow:0 8px 30px -28px rgba(24,33,60,.65);
+}
+.hd{max-width:1240px;padding:12px 28px;gap:12px}
+.logo{gap:10px;align-items:center;white-space:nowrap}
+.logo::before{
+  content:"ㅂ";display:grid;place-items:center;width:35px;height:35px;border-radius:11px;
+  color:#fff;background:linear-gradient(145deg,#7675EB,#4C4BC2);font-size:17px;font-weight:850;
+  box-shadow:0 8px 18px -10px rgba(76,75,194,.75);letter-spacing:0;
+}
+.logo b{font-size:20px;font-weight:820;color:var(--ink-1)}
+.logo span{font-size:12px;color:var(--ink-3)}
+nav{background:var(--sunk);padding:4px;border-radius:14px;gap:3px}
+nav button{padding:0 16px;border-radius:10px;font-weight:680}
+nav button[aria-selected=true]{background:var(--card);color:var(--s1-ink);box-shadow:0 2px 8px rgba(24,33,60,.09)}
+.seg{border-radius:13px;padding:4px;background:var(--sunk)}
+.seg button{border-radius:9px;font-weight:680}
+.seg button[aria-pressed="true"]{color:var(--s1-ink);box-shadow:0 2px 8px rgba(24,33,60,.09)}
+.ib{border-color:var(--border);background:var(--card);border-radius:12px;font-weight:620}
+.ib:hover{border-color:color-mix(in srgb,var(--s1) 40%,var(--border));color:var(--s1-ink)}
+h1{margin-top:42px;font-weight:820;line-height:1.27;letter-spacing:-.045em}
+h1::before{content:"LEARN BY TEACHING";display:block;margin-bottom:7px;color:var(--s1-ink);font-size:11px;font-weight:800;letter-spacing:.12em}
+h2{font-weight:780;color:var(--ink-1)}
+h3{font-weight:740;color:var(--ink-1)}
+.lead{line-height:1.75;color:var(--ink-2)}
+.card{border-color:var(--border);box-shadow:var(--shadow);backdrop-filter:blur(5px)}
+.picker{gap:10px;margin:24px 0 7px}
+.cbtn{
+  min-width:176px;padding:13px 15px;background:color-mix(in srgb,var(--card) 94%,var(--sunk));
+  border:1px solid var(--border);box-shadow:0 10px 28px -24px rgba(24,33,60,.55);
+}
+.cbtn:hover{border-color:rgba(92,91,214,.35);transform:translateY(-1px);box-shadow:0 12px 26px -19px rgba(76,75,194,.5)}
+.cbtn[aria-current=true]{border-color:var(--s1);box-shadow:0 0 0 3px var(--w1),0 14px 30px -22px rgba(76,75,194,.65);background:var(--card)}
+.cbtn .cn{font-size:15px;font-weight:750}
+.cbtn .cg{font-size:11px;margin-top:2px}
+.cbtn .cp{margin-top:9px}
+.stage{margin-top:20px;gap:20px}
+@media(min-width:880px){.stage{grid-template-columns:minmax(0,1.38fr) minmax(330px,.86fr);gap:20px}}
+.stage.ob #colL{max-width:700px}
+.stage.ob #colL>.card{
+  position:relative;overflow:hidden;border-top:4px solid var(--s1);padding:28px;
+  box-shadow:0 24px 60px -38px rgba(76,75,194,.62);
+}
+.stage.ob #colL>.card::after{
+  content:"";position:absolute;right:-65px;top:-76px;width:190px;height:190px;border-radius:50%;
+  background:linear-gradient(145deg,var(--w1),rgba(20,163,137,.08));pointer-events:none;
+}
+.pupil{gap:18px;position:relative;z-index:1}
+.avatar{
+  border-radius:20px;background:linear-gradient(145deg,rgba(92,91,214,.10),rgba(20,163,137,.08));
+  border:1px solid rgba(92,91,214,.16);box-shadow:inset 0 0 0 1px rgba(255,255,255,.25);
+}
+.bubble{
+  border-radius:8px 18px 18px 18px;background:color-mix(in srgb,var(--w1) 52%,var(--card));
+  border-color:rgba(92,91,214,.15);padding:15px 18px;line-height:1.8;
+}
+.bubble .nm{color:var(--s1-ink);font-weight:800;letter-spacing:.04em}
+textarea,.setup input,.setup select{
+  background:var(--card);border:1px solid var(--edge);box-shadow:inset 0 1px 2px rgba(24,33,60,.03);
+}
+textarea:hover,.setup input:hover,.setup select:hover{border-color:color-mix(in srgb,var(--s1) 42%,var(--edge))}
+textarea:focus,.setup input:focus,.setup select:focus{outline:3px solid var(--w1);border-color:var(--s1)}
+.btn{
+  background:linear-gradient(135deg,#6766E1,#4F4EC6);color:#fff;border-radius:12px;
+  box-shadow:0 10px 20px -14px rgba(76,75,194,.8);font-weight:750;
+}
+.btn:hover:not(:disabled){transform:translateY(-1px);box-shadow:0 13px 24px -14px rgba(76,75,194,.9)}
+.btn.ghost{background:var(--card);border:1px solid var(--edge);color:var(--ink-2);box-shadow:none}
+.btn.ghost:hover{border-color:rgba(92,91,214,.35);background:var(--w1);color:var(--s1-ink)}
+.lnk{color:var(--ink-3);text-decoration-color:var(--edge);text-underline-offset:3px}
+.lnk:hover{color:var(--s1-ink);text-decoration-color:var(--s1)}
+.slots{gap:9px}
+.slot{background:var(--sunk);border:1px solid var(--border);padding:13px 15px}
+.slot.on{border-color:rgba(92,91,214,.5);box-shadow:0 0 0 3px var(--w1)}
+.slot .top{gap:10px}.slot .nm{font-weight:720}.dot{width:9px;height:9px}
+.bar{background:color-mix(in srgb,var(--edge) 50%,var(--rule))}
+.covrow{grid-template-columns:55px 1fr 42px}.covrow .k{font-weight:680}.covrow .v{color:var(--ink-2)}
+.q{box-shadow:0 12px 28px -25px rgba(24,33,60,.55)}
+.headline{box-shadow:var(--shadow)}
+.cards{gap:14px}.mini{border-color:var(--border);box-shadow:0 12px 28px -26px rgba(24,33,60,.5)}
+.badge{border-radius:11px;background:var(--card)}
+.exchip{background:var(--card);border:1px solid var(--edge);color:var(--ink-2)}
+.exchip:hover{border-color:var(--s1);background:var(--w1);color:var(--s1-ink)}
+:root[data-density="student"] nav{display:none !important}
+:root[data-density="student"] #aiBtn{display:inline-flex !important;align-items:center;justify-content:center}
+
+@media(max-width:980px){
+  .logo span{display:none}.hd{padding:10px 18px}.wrap{padding-left:20px;padding-right:20px}
+}
+@media(max-width:760px){
+  header{position:relative}.hd{gap:9px}.logo{margin-right:auto}
+  nav{order:3;width:100%;overflow-x:auto;flex-wrap:nowrap}nav button{flex:1;white-space:nowrap}
+  h1{margin-top:30px;font-size:28px}.lead{font-size:16px}.wrap{padding-bottom:80px}
+  .picker{flex-wrap:nowrap;overflow-x:auto;margin-left:-20px;margin-right:-20px;padding:3px 20px 10px;scroll-snap-type:x proximity}
+  .cbtn{min-width:170px;scroll-snap-align:start}.pupil{gap:12px}.avatar{--ava-w:72px}.bubble{padding:13px 15px}
+}
+@media(max-width:520px){
+  .hd>.ib{padding:0 11px}.seg button{padding:0 11px}.logo::before{width:32px;height:32px}.logo b{display:none}
+  :root[data-density="student"] #modeBadge{display:none !important}
+  :root[data-density="student"] #aiBtn,
+  :root[data-density="student"] #reset{order:4;flex:1}
+  :root[data-density="student"]{--pad:18px;--fs-body:15.5px;--fs-h1:27px}
+  .wrap{padding-left:16px;padding-right:16px}.picker{margin-left:-16px;margin-right:-16px;padding-left:16px;padding-right:16px}
+  .pupil{align-items:center;flex-direction:column}.avatar{--ava-w:82px}.bubble{width:100%;border-radius:16px}
+  .stage.ob #colL>.card{padding:20px 17px}.row .btn{flex:1}.covrow{grid-template-columns:48px 1fr 36px;gap:8px}
+}
+
+/* ══ 검증 보정 (validator-driven) ══ */
+/* 1. 다크 계열색: 주황·청록이 밝기 밴드(L 0.48~0.67) 위로 벗어나 한 가족으로 안 읽힘 → 통과 지점으로 스냅 */
+:root[data-theme="dark"]{ --s2:#DB6E55; --s3:#2EA990; }
+/* 2. 눈썹 라벨이 모든 h1에 붙어 '이해 이력'·'이 프로젝트에 대하여' 위에도 나옴 → 교실 h1에만 */
+h1::before{ content:none }
+#tab-class h1::before{
+  content:"LEARN BY TEACHING";display:block;margin-bottom:7px;
+  color:var(--s1-ink);font-size:11px;font-weight:800;letter-spacing:.12em;
+}
+/* 3. 학생 모드에 AI 연결(=API 키 입력)이 노출됨 → 교사 전용으로 되돌림.
+      학생도 연결하게 하려면 이 블록만 지우면 됩니다. */
+:root[data-density="student"] #aiBtn{ display:none !important }
+</style>
+</head>
+<body>
+
+<a class="skip" href="#tin">본문으로 건너뛰기</a>
+<header><div class="hd">
+  <div class="logo"><b>백지</b><span>내가 가르친 것만 아는 AI 제자</span></div>
+  <nav id="nav">
+    <button data-t="class" aria-selected="true">교실</button>
+    <button class="t-only" data-t="hist" aria-selected="false">이해 이력</button>
+    <button class="t-only" data-t="about" aria-selected="false">이 프로젝트에 대하여</button>
+  </nav>
+  <div class="seg" role="group" aria-label="화면 모드">
+    <button id="denS" aria-pressed="true">학생</button>
+    <button id="denT" aria-pressed="false">교사</button>
+  </div>
+  <span class="badge t-only" id="modeBadge"><i></i>규칙 모드</span>
+  <button class="ib t-only" id="aiBtn">AI 연결</button>
+  <button class="ib" id="theme" aria-label="밝게/어둡게 전환">◐</button>
+  <button class="ib" id="reset"><span class="t-only">이 개념 처음부터</span><span id="resetS">처음부터</span></button>
+</div></header>
+
+<div class="wrap">
+
+<!-- ===================== 교실 ===================== -->
+<section id="tab-class">
+  <h1>제자에게 <span style="color:var(--s2-ink)" id="topicName"></span>을 가르쳐 주세요</h1>
+  <p class="lead">
+    <span class="t-only">이 제자는 <b>당신이 말해 준 것만</b> 압니다. 정답을 미리 알고 모르는 척하는 게 아니라,
+    가르친 규칙만으로 문제를 풉니다. 제자가 틀리면 — 그건 <b>설명에 뚫린 구멍</b>입니다.</span>
+    <span id="leadS">이 제자는 <b>내가 알려준 것만</b> 알아요. 모르는 척하는 게 아니라 정말로 모릅니다.
+    제자가 문제를 틀리면 — 제자가 못한 게 아니라 <b>내 설명에 빠진 게 있다</b>는 뜻이에요.</span>
+  </p>
+
+  <div class="card pad setup hide" id="setup">
+    <h3>AI 귀 연결하기</h3>
+    <p class="muted" style="margin:-4px 0 14px">
+      연결하면 <b>학생의 말을 알아듣는 부분</b>만 LLM이 맡습니다. 제자의 추론은 그대로 규칙 엔진으로 남습니다 —
+      제자가 배우지 않은 것을 알아버리면 이 프로토타입의 전제가 무너지기 때문입니다.
+      <b>무료 등급과 로컬 모델만 지원합니다.</b>
+
+    </p>
+    <div class="grid">
+      <label for="prov">제공자</label>
+      <select id="prov">
+        <option value="gemini">Google Gemini — 무료 등급</option>
+        <option value="ollama">로컬 · Ollama — 권장</option>
+        <option value="lmstudio">로컬 · LM Studio — 권장</option>
+        <option value="custom">기타 · OpenAI 호환 주소 직접 입력</option>
+      </select>
+      <label for="model">모델</label>
+      <input type="text" id="model" value="claude-haiku-4-5" spellcheck="false">
+      <label for="base">Base URL</label>
+      <input type="text" id="base" value="" spellcheck="false">
+      <label for="key">키 <span class="muted" style="font-weight:400">(로컬은 불필요)</span></label>
+      <input type="password" id="key" placeholder="무료 등급 키를 붙여 넣으세요" spellcheck="false" autocomplete="off">
+    </div>
+    <div style="margin-top:14px;padding:13px 15px;border:1px solid var(--border);border-radius:12px;background:var(--plane)">
+      <div style="font-size:12.5px;font-weight:680;color:var(--ink-2);margin-bottom:8px">이번 세션 사용량</div>
+      <div id="usageBox"></div>
+    </div>
+    <p class="muted" id="provNote" style="margin:10px 0 0;line-height:1.6"></p>
+    <div id="testOut" class="hide"></div>
+    <div class="row" style="margin-top:14px;justify-content:flex-end">
+      <button class="btn ghost" id="aiOff">연결 끊기</button>
+      <button class="btn ghost" id="aiTest">연결 테스트</button>
+      <button class="btn" id="aiSave">연결하기</button>
+    </div>
+    <p class="warn">
+      이 프로토타입은 <b>유료 API를 쓰지 않습니다.</b> 무료 등급과 로컬 모델만 붙습니다.
+      키는 <b>이 브라우저 탭의 메모리에만</b> 있고 저장하지 않으며 새로고침하면 사라집니다.
+      여러 사람이 쓰는 서비스로 만들 때는 키를 서버 뒤에 두어야 합니다.
+    </p>
+  </div>
+
+  <div class="picker" id="picker"></div>
+
+  <div class="stage">
+    <div id="colL">
+      <div class="card pad">
+        <div class="pupil">
+          <div class="avatar" id="ava" role="img" aria-label="제자"></div>
+          <div class="bubble"><span class="nm">제자</span><span id="says" role="status" aria-live="polite"></span></div>
+        </div>
+
+        <div id="obStart" class="hide" style="margin-top:18px;text-align:center">
+          <button class="btn" id="obGo" style="font-size:calc(var(--fs-body) + 1px);padding:16px 32px">알려주기 시작</button>
+          <div style="margin-top:10px"><button class="lnk" id="obSkip">바로 전체 화면 보기</button></div>
+        </div>
+
+        <div id="teachArea" style="margin-top:18px">
+          <div id="obEx" class="hide" style="margin-bottom:10px">
+            <div class="muted" style="margin-bottom:6px">이렇게 시작해도 돼요 — 눌러서 넣어 보세요</div>
+            <div class="row" id="obExRow" style="gap:8px"></div>
+          </div>
+          <textarea id="tin" rows="3"></textarea>
+          <div class="row" style="margin-top:10px;justify-content:space-between">
+            <span class="muted"><span id="tcount">0자</span><span id="usage"></span></span>
+            <div class="row">
+              <button class="btn ghost" id="examBtn">시험 보내기</button>
+              <button class="btn" id="teachBtn" disabled>가르치기</button>
+            </div>
+          </div>
+        </div>
+        <div id="confirmWrap"></div>
+      </div>
+      <div class="card pad" id="tapeCard" style="margin-top:16px">
+        <h3>수업 기록</h3>
+        <div id="tape" style="display:flex;flex-direction:column;gap:9px;max-height:300px;overflow-y:auto"></div>
+      </div>
+    </div>
+
+    <div id="colR">
+      <div class="card pad">
+        <h3>제자의 머릿속</h3>
+        <p class="muted" style="margin:-4px 0 12px">
+          <span class="t-only">가르쳐야 할 것은 여섯 가지입니다. 무엇을 가르칠지는 알려 주지만, <b>어떻게 말할지는 알려 주지 않습니다.</b></span>
+          <span id="slotHintS">알려줘야 할 게 여섯 가지 있어요. <b>무엇을</b> 알려줄지는 적어 뒀지만, <b>어떻게 말할지는 네가 정해요.</b></span>
+        </p>
+        <div class="slots" id="slots"></div>
+      </div>
+      <div class="card pad" style="margin-top:16px">
+        <h3><span class="t-only">이해 커버리지</span><span id="covTitleS">제자가 풀 수 있는 문제</span></h3>
+        <div class="cov" id="cov"></div>
+        <p class="muted" style="margin:12px 0 0" id="covnote"></p>
+      </div>
+    </div>
+  </div>
+
+  <div id="headline" role="status" aria-live="polite"></div>
+
+  <div class="hide" id="examWrap" style="margin-top:22px">
+    <h2>시험지 <span class="muted" style="font-weight:400;font-size:14px" id="vlabel"></span></h2>
+    <p class="lead" style="font-size:14.5px" id="examNote"></p>
+    <div class="qgrid" id="qgrid"></div>
+  </div>
+</section>
+
+<!-- ===================== 이해 이력 ===================== -->
+<section id="tab-hist" class="hide">
+  <h1>이해 이력</h1>
+  <p class="lead">점수 곡선이 아니라 <b>개념의 변경 이력</b>입니다. 무엇을 가르쳤을 때 무엇이 통과했고, 무엇이 <b>깨졌는지</b>가 남습니다.</p>
+  <div class="card pad" style="margin-top:16px">
+    <h3>연구용 로그 내보내기</h3>
+    <p class="muted" style="margin:-4px 0 12px">
+      검증 연구에 쓸 프로세스 지표를 JSON으로 내려받습니다. 학생 이름 대신 <b>익명 ID</b>만 넣으세요 —
+      사전·사후 검사와 연결하기 위한 것이며, 이름·학번을 넣지 마세요.
+    </p>
+    <div class="row" style="gap:10px">
+      <input type="text" id="sid" placeholder="익명 ID (예: A-07)" spellcheck="false"
+             style="flex:1;min-width:150px;max-width:240px;background:var(--sunk);border:1.5px solid var(--edge);
+                    border-radius:var(--radius-sm);padding:10px 13px;min-height:var(--touch);font:inherit;color:var(--ink-1)">
+      <button class="btn ghost" id="expBtn">JSON 내려받기</button>
+      <span class="muted" id="expNote"></span>
+    </div>
+  </div>
+  <div class="cards" id="histSummary" style="margin-top:16px"></div>
+  <h2 id="histTitle"></h2>
+  <div class="row" style="gap:16px;font-size:13px;color:var(--ink-2)">
+    <span><i style="display:inline-block;width:10px;height:10px;border-radius:3px;background:var(--s1);margin-right:6px;vertical-align:-1px"></i>계산</span>
+    <span><i style="display:inline-block;width:10px;height:10px;border-radius:3px;background:var(--s2);margin-right:6px;vertical-align:-1px"></i>의미</span>
+    <span><i style="display:inline-block;width:10px;height:10px;border-radius:3px;background:var(--s3);margin-right:6px;vertical-align:-1px"></i>설명</span>
+  </div>
+  <div id="hist"></div>
+</section>
+
+<!-- ===================== 소개 ===================== -->
+<section id="tab-about" class="hide">
+  <h1>이 프로젝트에 대하여</h1>
+  <p class="lead">
+    기존 AI 교육 도구는 대부분 <b>AI가 학생을 가르친다</b>는 구도입니다.
+    이 프로젝트는 그 화살표를 뒤집고, 뒤집었을 때만 보이는 것을 계측합니다.
+  </p>
+
+  <h2>네 가지 관점</h2>
+  <div class="cards">
+    <div class="mini"><span class="tag a">관점 1</span>
+      <h4>LLM 시대에 ‘제자’를 만들려면 AI를 <em>봉인</em>해야 한다</h4>
+      <p>가르치기(learning by teaching)의 핵심은 제자가 <b>딱 내가 설명한 만큼만</b> 아는 것입니다.
+      그런데 요즘 AI는 분수 나눗셈을 이미 안다 — 이게 진짜 기술적 난제입니다.
+      제자의 지식을 <b>개념당 6개 슬롯</b>으로 명시하고 채워진 슬롯만으로 결정론적 추론을 돌려,
+      “아는 척”이 구조적으로 불가능하게 만들었습니다.</p></div>
+    <div class="mini"><span class="tag b">관점 2</span>
+      <h4>학습을 소프트웨어처럼 다룬다</h4>
+      <p>규칙집 = 코드. 시험지 = 테스트 스위트. 오개념 = 버그. 이해의 성장 = 커밋 히스토리.
+      그래서 <b>회귀 테스트</b>가 있습니다. 새 규칙을 가르치면 이전에 통과하던 문항도 다시 풉니다 —
+      불완전한 개념은 아무것도 모르는 것보다 <b>나쁠 수도</b> 있기 때문입니다.</p></div>
+    <div class="mini"><span class="tag c">관점 3</span>
+      <h4>점수가 학생이 아니라 <em>규칙집</em>에 붙는다</h4>
+      <p>틀린 것은 학생이 아니라 학생이 만든 모형입니다. 모형은 고칠 수 있고, 버전이 올라가고, 남의 것과 비교할 수도 있습니다.
+      실패의 소유자가 사람에서 산출물로 옮겨가면 <b>실패가 안전해집니다.</b></p></div>
+    <div class="mini"><span class="tag d">관점 4</span>
+      <h4>계산 100% / 의미 0% 를 한 화면에</h4>
+      <p>절차만 가르치면 계산 5문항은 전부 맞고 의미·설명은 전부 틀립니다.
+      절차적 지식과 개념적 지식의 분리를 <b>커버리지 막대 세 개</b>로 눈앞에 세우는 것 —
+      세 개념 모두에서 이 장면이 반드시 한 번 나오도록 문항을 설계했습니다.</p></div>
+  </div>
+
+  <h2>다섯 개념, 같은 뼈대</h2>
+  <p class="lead" style="font-size:14.5px">
+    슬롯 스키마는 과목에 독립적입니다. 개념마다 <b>슬롯 6개 · 문항 10개 · 회귀 지점 1개</b>를 채우면 붙습니다.
+    아래는 “얕은 규칙만 아는 상태”가 과목별로 어떤 얼굴을 하는지 나란히 놓은 것입니다.
+  </p>
+  <div class="card pad" style="margin-top:12px;overflow-x:auto">
+    <table><thead><tr><th style="width:150px">개념</th><th style="width:150px">얕은 규칙만 알 때</th><th>회귀를 일으키는 <b>맞지만 불완전한 생각</b></th><th style="width:96px">깨지는 문항</th></tr></thead>
+    <tbody>
+      <tr><td><b>분수 나눗셈</b><br><span class="muted">초6~중1 수학</span></td>
+          <td>계산 5/5<br>의미 0/3 · 설명 0/2</td>
+          <td>나눗셈 = <b>똑같이 나눠 주기</b>(등분제) → “‘반 명’한테 어떻게 나눠 줘요?”</td>
+          <td>C3, C5</td></tr>
+      <tr><td><b>음수의 곱셈</b><br><span class="muted">중1 수학</span></td>
+          <td>계산 5/5<br>의미 1/3 · 설명 0/2</td>
+          <td><b>빚 모형</b>만 → “빚을 <b>빚만큼</b> 곱한다는 게 무슨 뜻이에요?”</td>
+          <td>C2, C3, C5</td></tr>
+      <tr><td><b>평균</b><br><span class="muted">초5~6 수학</span></td>
+          <td>계산 5/5<br>의미 0/3 · 설명 0/2</td>
+          <td>평균 = <b>고르게 만든 값</b> → “두 반을 고르게 하면 딱 가운데 65죠!”</td>
+          <td>C5</td></tr>
+      <tr><td><b>힘과 운동</b><br><span class="muted">중1 과학</span></td>
+          <td>적용 5/5<br>의미 0/3 · 설명 0/2</td>
+          <td>작용·반작용 = <b>크기가 같고 반대</b>만 → “다 상쇄되니까 아무것도 가속될 수 없잖아요?”</td>
+          <td>C1~C4</td></tr>
+      <tr><td><b>주장과 근거</b><br><span class="muted">초5~6 국어</span></td>
+          <td>판별 5/5<br>판단 0/3 · 설명 0/2</td>
+          <td><b>성급한 일반화를 경계</b>만 → “3천 명 조사도 결국 사례니까 못 믿겠어요.”</td>
+          <td>T1</td></tr>
+    </tbody></table>
+  </div>
+
+  <h2>과목을 옮겨 보고 알게 된 것</h2>
+  <div class="cards">
+    <div class="mini"><span class="tag a">옮겨간 것</span>
+      <h4>뼈대는 과목을 탄다</h4>
+      <p>과학과 국어 모두 슬롯 6 · 문항 10 · 회귀 1 로 어렵지 않게 채워졌습니다.
+      필요한 조건은 딱 하나 — <b>정답 판정이 결정론적</b>일 것.</p></div>
+    <div class="mini"><span class="tag b">바뀐 것</span>
+      <h4>카테고리 이름은 갈아 끼워야 했다</h4>
+      <p>수학은 <b>계산</b>, 과학은 <b>적용</b>, 국어는 <b>판별</b>. 이름은 다르지만 밑에 깔린 축은 같습니다 —
+      <b>규칙을 굴리는가 / 왜인지 아는가 / 남에게 정당화하는가.</b></p></div>
+    <div class="mini"><span class="tag c">발견</span>
+      <h4>‘얕은 규칙’의 정체가 과목마다 다르다</h4>
+      <p>수학은 <b>계산 절차</b>, 과학은 <b>공식 암기</b>, 국어는 <b>형식 구분</b>(주장/근거·사실/의견 가려내기).
+      공통점은 셋 다 <b>시험 점수가 잘 나온다</b>는 것입니다.</p></div>
+    <div class="mini"><span class="tag d">발견</span>
+      <h4>회귀가 두 종류로 갈렸다</h4>
+      <p><b>(A) 불완전한 비유가 절차를 막는다</b> — 등분제, 빚 모형, 고르게 만들기, 작용·반작용.<br>
+      <b>(B) 비판 규칙의 과잉 적용이 판단을 마비시킨다</b> — 국어의 성급한 일반화.
+      B는 인문·사회 쪽에서 더 자주 나올 것으로 보입니다.</p></div>
+  </div>
+  <div class="quote">
+    <b>안 되는 영역도 분명합니다.</b> 정답이 여럿이고 해석이 갈리는 곳 — 문학 감상, 역사 해석, 미술 비평 —
+    에서는 이 엔진이 작동하지 않습니다. 제자를 <b>통과/실패</b>로 채점하려면 판정이 결정론적이어야 하는데,
+    그 영역은 애초에 그렇지 않기 때문입니다. 그쪽으로 가려면 채점을 버리고
+    <b>“제자가 당신 설명대로 읽으면 이런 해석이 나온다”</b>를 보여주는 다른 형태가 필요합니다 — 다음에 시험해 볼 방향입니다.
+  </div>
+
+  <h2>AI를 어디에 붙일 것인가</h2>
+  <p class="lead" style="font-size:14.5px">
+    규칙 정규식은 표현이 조금만 달라도 못 알아듣습니다.
+    “5리터 물통을 500밀리 컵으로 다 퍼내려면 컵질을 열 번 해야 하잖아” — 포함제를 정확히 설명한 문장인데 규칙 엔진은 놓칩니다.
+    그렇다고 <b>제자 전체를 LLM으로 만들면</b> 이 프로젝트의 전제가 무너집니다. LLM은 분수 나눗셈을 이미 알기 때문입니다.
+    그래서 경계를 그었습니다.
+  </p>
+  <div class="cards">
+    <div class="mini"><span class="tag a">귀 = LLM</span>
+      <h4>유연한 귀</h4>
+      <p>학생의 말이 <b>슬롯의 내용을 담았는가</b>만 판정합니다. 교과서 용어를 안 써도, 비유나 예시로만 말해도
+      뜻이 통하면 통과. 판정 결과에는 학생 말에서 근거가 된 부분을 인용해 함께 보여 줍니다.</p></div>
+    <div class="mini"><span class="tag d">머리 = 규칙</span>
+      <h4>엄격한 머리</h4>
+      <p>제자의 추론은 그대로 결정론적 규칙 엔진입니다. 채워진 슬롯만으로 문제를 풀고,
+      배우지 않은 것은 <b>구조적으로 쓸 수 없습니다.</b> 누출 위험이 0인 대신 대사는 사람이 씁니다.</p></div>
+    <div class="mini"><span class="tag b">부작용 1</span>
+      <h4>잘못 알아들으면? — 확인 루프</h4>
+      <p>“제가 이렇게 알아들었어요 → 맞아요 / 아니에요”. 학생이 판정을 되돌릴 수 있습니다.
+      번거로움이 아니라 <b>내 말이 어떻게 읽혔는지 보는 장치</b>이고, 그 자체가 교육적입니다.</p></div>
+    <div class="mini"><span class="tag c">부작용 2</span>
+      <h4>이진 판정이 거칠면? — 부분 이해</h4>
+      <p>방향은 맞지만 조건이 빠졌으면 <b>절반</b>으로 판정합니다.
+      제자는 그 슬롯을 문제 풀이에 쓰지 못하고, 대신 <b>무엇이 빠졌는지</b>를 콕 집어 되묻습니다.</p></div>
+  </div>
+  <div class="quote">
+    <b>목소리를 나눈 이유.</b> 추출기가 “이 설명은 교과 내용과 다릅니다”라고 판정할 수 있는데,
+    그 말을 제자가 하면 <b>제자가 정답을 아는 것처럼</b> 보입니다. 그래서 그 문장만 제자의 입이 아니라
+    회색 <b>‘추출기 메모’</b> 박스로 뺐습니다. 아는 쪽과 모르는 쪽이 같은 화면에 있을 때, 누가 말하는지를 갈라 두는 것이
+    이 프로토타입에서는 UI 문제가 아니라 설계의 일부입니다.
+  </div>
+
+  <h2>요금 없이 돌리기</h2>
+  <p class="lead" style="font-size:14.5px">
+    이 프로토타입은 <b>유료 API를 붙이지 않습니다.</b> 무료 등급과 로컬 모델만 지원합니다.
+    참고로 Claude Pro나 ChatGPT Plus 같은 <b>구독은 붙일 수 없습니다</b> — 구독은 채팅 앱 이용권이고,
+    프로그램이 모델을 부르는 것은 별도로 결제되는 개발자 API이기 때문입니다.
+    브라우저 세션을 흉내 내 채팅 앱을 호출하는 방법은 약관 위반이고 화면이 바뀌면 바로 깨지므로 선택지가 아닙니다.
+  </p>
+  <div class="cards">
+    <div class="mini"><span class="tag c">권장</span>
+      <h4>로컬 모델 — Ollama / LM Studio</h4>
+      <p>내 컴퓨터에서 돌립니다. <b>요금 0원, 호출 한도 없음, 학생 문장이 기기 밖으로 나가지 않습니다.</b>
+      이 앱이 시키는 일은 “짧은 문장이 이 내용을 담았나” 판정뿐이라 작은 모델로도 될 가능성이 큽니다 —
+      다만 <b>한국어 판정 품질은 반드시 실측</b>해야 합니다.</p>
+      <div class="cite">브라우저에서 부르려면 Ollama는 <code>OLLAMA_ORIGINS=*</code>, LM Studio는 CORS 허용 체크가 필요합니다.</div></div>
+    <div class="mini"><span class="tag a">가장 쉬움</span>
+      <h4>Google Gemini 무료 등급</h4>
+      <p>AI Studio에서 <b>카드 없이</b> 키를 만들 수 있고, OpenAI 호환 엔드포인트를 제공해 그대로 꽂힙니다.
+      설치가 필요 없어 시작이 가장 빠릅니다. 다만 하루 호출 한도가 있고
+      <b>무료 등급은 데이터 사용 정책이 유료와 다를 수 있어</b> 학생 문장을 넣기 전에 약관을 읽어야 합니다.</p></div>
+    <div class="mini"><span class="tag d">확장</span>
+      <h4>기타 OpenAI 호환 주소</h4>
+      <p>무료 등급을 제공하는 다른 서비스나 직접 띄운 서버가 있다면
+      설정에서 <b>주소와 모델명만 바꿔</b> 붙일 수 있습니다. 이 앱은 표준 <code>/chat/completions</code> 하나만 부릅니다.</p></div>
+  </div>
+
+  <h3 style="margin-top:24px">무료 등급에서 진짜 걸리는 것</h3>
+  <p class="lead" style="font-size:14.5px">돈이 아니라 <b>하루 호출 횟수</b>입니다. 이 앱이 API를 부르는 순간은 딱 하나 — <b>가르치기</b>뿐입니다.</p>
+  <div class="card pad" style="margin-top:10px;overflow-x:auto">
+    <table><thead><tr><th>동작</th><th class="num">API 호출</th><th>메모</th></tr></thead>
+    <tbody>
+      <tr><td><b>가르치기 1회</b></td><td class="num">1회</td><td>입력 약 1,200 · 출력 약 400 토큰</td></tr>
+      <tr><td><b>시험 보내기 · 회귀 판정 · 커밋 로그</b></td><td class="num">0회</td><td>전부 브라우저 안에서 계산</td></tr>
+      <tr><td><b>개념 하나 완주</b></td><td class="num">6~9회</td><td>슬롯 6개를 다 채울 때까지</td></tr>
+      <tr><td><b>30명 한 학급 · 1차시</b></td><td class="num">약 210회</td><td>로컬 모델은 한도 자체가 없음</td></tr>
+    </tbody></table>
+  </div>
+  <div class="quote">
+    <b>‘귀에만 붙이기’는 여기서도 이깁니다.</b> 제자의 답까지 LLM이 생성하게 하면 시험 한 번에 10문항을 만들어야 하고,
+    한 세션에 시험을 예닐곱 번 보므로 호출이 <b>5~6배</b>로 뜁니다 — 무료 등급 하루 한도를 금방 태웁니다.
+    지금 구조는 LLM이 <b>짧은 문장 하나를 읽고 JSON 한 줄</b>을 뱉을 뿐이라, 무료 등급 안에서 한 학급이 돌아갈 수 있습니다.
+  </div>
+  <div class="card pad" style="margin-top:12px">
+    <ul class="t">
+      <li><b>로컬을 기본으로 권하는 이유는 요금이 아닙니다.</b> 이 프로젝트는 학생이 쓴 문장 — 사고 과정 그 자체 — 를 입력으로 받습니다. 성적표보다 민감한 데이터이고, 그걸 외부로 보내는 순간 비용보다 먼저 따질 것이 생깁니다.</li>
+      <li><b>실제로 학교에 넣는다면</b> 키를 브라우저에 두면 안 됩니다. 서버를 한 겹 두고 학생별 <b>호출 한도</b>(예: 1인 1차시 15회)를 걸어야 무료 등급이 하루 만에 소진되지 않습니다.</li>
+      <li><b>작은 모델로 내리기 전에</b> 교사 표본 채점과의 일치도를 먼저 확인해야 합니다. 관대함이 떨어지면 이 기능의 존재 이유가 사라집니다.</li>
+    </ul>
+  </div>
+
+  <h2 id="engineTitle">제자의 추론 엔진</h2>
+  <p class="lead" style="font-size:14.5px">LLM이 아닙니다. 6개 슬롯의 조합이 각 문항의 결과를 결정합니다. 채워지지 않은 슬롯은 <b>특정한 방식으로</b> 실패합니다.</p>
+  <div class="card pad" style="margin-top:12px;overflow-x:auto">
+    <table><thead><tr><th style="width:170px">슬롯</th><th>비었을 때 제자가 하는 행동</th><th style="width:120px">영향받는 문항</th></tr></thead>
+    <tbody id="engineTable"></tbody></table>
+  </div>
+
+  <h2>근거가 된 것들</h2>
+  <div class="cards">
+    <div class="mini"><span class="tag d">학습과학</span><h4>protégé effect</h4>
+      <p>남을 가르치기 위해 준비한 사람은 자기 시험을 위해 준비한 사람보다 더 깊이 이해합니다.
+      Chase 외(2009)는 학생이 <b>가상의 제자</b>를 가르칠 때 자기 자신을 위할 때보다 더 노력한다는 것을 보였습니다
+      (Teachable Agents / Betty’s Brain 계열, Biswas·Schwartz 등).</p></div>
+    <div class="mini"><span class="tag d">개념적 이해</span><h4>절차적 지식 ≠ 개념적 지식</h4>
+      <p>Skemp(1976)의 도구적 이해 vs 관계적 이해. Ma(1999)는 미국 교사의 다수가
+      분수 나눗셈의 <b>절차는 알지만 왜 그런지 설명하지 못하고</b> 상황 문제를 만들지 못했다고 보고했습니다.</p></div>
+    <div class="mini"><span class="tag d">오개념</span><h4>암묵적 모형은 절차를 이긴다</h4>
+      <p>Fischbein 외(1985). 학생은 나눗셈을 ‘등분’으로만 내면화해 1보다 작은 수로 나눌 때
+      계산 결과를 <b>스스로 부정</b>합니다. 제자가 12를 3으로 고치는 장면이 그것입니다.</p></div>
+    <div class="mini"><span class="tag d">비유의 한계</span><h4>모형은 어디까지 늘어나는가</h4>
+      <p>빚 모형은 음수×양수를 잘 설명하지만 음수×음수에서 무너집니다.
+      비유가 깨지는 자리를 <b>미리 겪게 하는 것</b>이 이 도구의 교육적 기능입니다.</p></div>
+  </div>
+
+  <h2>한계 — 솔직하게</h2>
+  <div class="card pad"><ul class="t">
+    <li><b>이번엔 추출기의 관대함이 새 변수입니다.</b> AI 귀를 붙여 정규식의 경직성은 풀었지만, “어디까지를 이해로 볼 것인가”는 이제 LLM의 판단에 달렸습니다. 정답이 없는 문제라 실제로는 <b>교사 표본 채점과 대조해 보정</b>해야 하고, 같은 문장에 매번 같은 판정이 나오지 않을 수 있습니다(비결정성).</li>
+    <li><b>봉인은 지금은 안전하지만 그건 제자를 규칙으로 남겼기 때문입니다.</b> 제자의 대사까지 LLM에 맡기면 배우지 않은 지식이 새어 나올 수 있습니다. 그때는 “슬롯 밖 지식을 사용했는가”를 재는 <b>누출률 지표</b>가 필수가 됩니다.</li>
+    <li><b>개념 확장 비용이 선형입니다.</b> 뼈대는 일반화했지만 슬롯·문항·실패 대사는 개념마다 사람이 씁니다. 개념 하나에 약 반나절이고, 이건 LLM으로도 잘 줄지 않을 것 같습니다 — 어려운 건 문장 생성이 아니라 <b>어떤 오개념이 어떤 문항을 막는지</b>를 정하는 일이니까요.</li>
+    <li><b>교육 효과는 미검증입니다.</b> 이 화면이 설득력 있다는 것과 실제로 개념적 이해를 높인다는 것은 다른 주장입니다. 최소한 사전-사후 설계와 대조군(직접 설명 쓰기)이 필요합니다.</li>
+    <li><b>회귀가 좌절로 읽힐 위험이 있습니다.</b> “맞게 가르쳤는데 점수가 떨어졌다”는 경험은 통찰일 수도, 그냥 불쾌일 수도 있습니다. 어느 쪽인지는 관찰로만 알 수 있습니다.</li>
+  </ul></div>
+
+  <h2>다음 단계</h2>
+  <div class="card pad"><ul class="t">
+    <li><b>1. (완료)</b> LLM 추출기 + 확인·수정 루프 + 부분 이해 판정</li>
+      <li><b>1-1.</b> 추출기 관대함 보정 — 교사 여러 명이 채점한 학생 문장 100개와 일치도(Cohen’s κ) 측정</li>
+    <li><b>2.</b> 제자까지 LLM으로 옮기는 실험 + 슬롯 밖 지식 누출률 측정 (적대적 프롬프트로 유도해 보기)</li>
+    <li><b>3.</b> 해석이 갈리는 영역(문학·역사) — 채점을 버리고 ‘제자의 읽기’를 보여주는 형태로 재설계</li>
+    <li><b>4.</b> 규칙집 <b>공유·비교</b> 모드 — 같은 반 학생들의 서로 다른 이해 모형을 나란히 실행</li>
+    <li><b>5.</b> 교사 화면 — 학급에서 가장 많이 비어 있는 슬롯이 곧 다음 수업의 목표</li>
+  </ul></div>
+</section>
+</div>
+
+<script>
+"use strict";
+const f = (a,b)=>`<span class="frac"><i>${a}</i><i>${b}</i></span>`;
+const P = (said,ans)=>({ok:true,  said, ans:ans||""});
+const X = (said,ans)=>({ok:false, said, ans:ans||""});
+
+/* ══════════════════════ 개념 데이터 ══════════════════════ */
+const CONCEPTS = [
+/* ─── 1. 분수 나눗셈 ─── */
+{
+ id:"fracdiv", ex:["분수 나눗셈은 뒤집어서 곱하면 돼."], nm:"분수 나눗셈", grade:"초6~중1 · 수학",
+ ph:"예) 분수 나눗셈은 뒤집어서 곱하면 돼.",
+ hello:`안녕하세요 선생님. 저는 <b>분수 나눗셈을 하나도 모릅니다.</b>
+   아는 척도 못 해요 — 선생님이 말해 준 규칙만 쓸 수 있거든요. 뭐부터 알려 주실래요?`,
+ slots:[
+  {key:"meaning", nm:"나눗셈의 의미", hint:"나눗셈이 도대체 무슨 뜻인지",
+   subs:[["partition","등분제 · 똑같이 나눠 주기"],["measurement","포함제 · 몇 번 들어가는가"]],
+   empty:"의미를 물으면 아무 말도 못 함. <b>등분제만</b> 있으면 “‘반 명’한테 어떻게 나눠 줘요?”라며 절차를 알면서도 거부", affects:"M1, M2 / C3, C5 회귀"},
+  {key:"reciprocal", nm:"역수의 정의", hint:"‘뒤집는다’가 정확히 무엇을 어떻게 하는 것인지",
+   empty:"뒤집지 않고 그냥 곱함", affects:"계산 전부"},
+  {key:"procedure", nm:"계산 절차", hint:"실제로 손으로 어떻게 계산하는지",
+   empty:"아무것도 시작하지 못함", affects:"계산 전부"},
+  {key:"whole", nm:"자연수 다루기", hint:"3처럼 분수가 아닌 수가 나오면 어떻게 하는지",
+   empty:"“3은 분수가 아니라서 뒤집을 수가 없어요”", affects:"C1, C4"},
+  {key:"magnitude", nm:"답의 크기 감각", hint:"답이 원래 수보다 커질 수도 있는지",
+   empty:"12를 구해 놓고 <b>스스로 3으로 고침</b> — “나눗셈인데 커지면 이상하잖아요”", affects:"C3, C5, T1"},
+  {key:"justification", nm:"왜 그렇게 되는가", hint:"그 절차가 왜 정당한지",
+   empty:"“그냥 그렇게 하라고 배웠어요”", affects:"E1"}
+ ],
+ detect:[
+  {slot:"procedure", re:/(뒤집|역수)[^.。\n]{0,12}(곱)|나눗셈[^.。\n]{0,14}곱셈|÷[^.。\n]{0,8}×|곱하기로\s*바꾸|곱셈으로\s*(바꾸|고치)/},
+  {slot:"reciprocal", re:/역수|뒤집|분자[^.。\n]{0,10}분모[^.。\n]{0,10}(바꾸|서로|교환|뒤바)|분모[^.。\n]{0,10}분자[^.。\n]{0,10}(바꾸|서로|교환|뒤바)|위\s*아래[^.。\n]{0,8}바꾸/},
+  {slot:"whole", re:/자연수|정수|(\d)\s*=\s*\1\s*\/\s*1|분모(가|를|에|는)?\s*1|1분의|[2-9]\/1\b|분수가\s*아닌\s*수/},
+  {slot:"magnitude", re:/(1보다\s*작은|작은\s*수|진분수)[^.。\n]{0,18}(커|크게|커진|커짐|늘)|나누[^.。\n]{0,14}커질?|커질\s*수(도|가)|답이\s*(더\s*)?커/},
+  {slot:"justification", re:/1(로|이)\s*(만들|되게|되도록|만드)|나누는\s*수를\s*1|양변|분자와\s*분모에?\s*(같은|똑같은)\s*수|같은\s*수를\s*곱해도|번분수|곱셈의?\s*역(연산)?(이|이기|이라)|나누는\s*수가\s*1이\s*되/},
+  {slot:"meaning:measurement", re:/(몇\s*(번|개|조각))[^.。\n]{0,12}(들어|들었|포함|있)|안에[^.。\n]{0,14}몇|얼마나\s*들어|포함(제|되)|몇\s*번\s*담/},
+  {slot:"meaning:partition", re:/(똑같이|공평|균등|고르게)[^.。\n]{0,10}나(누|눠)|등분|나눠\s*주|나누어\s*주|(명|사람|친구)[^.。\n]{0,6}나(누|눠)/}
+ ],
+ items:[
+  {id:"C1",kind:"calc",q:`${f(1,2)} ÷ 3`,run:k=>
+    !k.procedure ? X("이건 어떻게 시작하는지 안 배웠어요.")
+   :!k.reciprocal? X(`뭘 뒤집는 건지 몰라서 그냥 곱했어요. ${f(1,2)} × 3 = ${f(3,2)}`,`${f(3,2)}`)
+   :!k.whole     ? X("3은 분수가 아니라서 뒤집을 수가 없어요.")
+   : P(`3을 ${f(3,1)}로 보고 ${f(1,2)} × ${f(1,3)} = ${f(1,6)}`,`${f(1,6)}`)},
+  {id:"C2",kind:"calc",q:`${f(3,4)} ÷ ${f(3,2)}`,run:k=>
+    !k.procedure ? X("이건 어떻게 시작하는지 안 배웠어요.")
+   :!k.reciprocal? X(`뒤집는 걸 몰라서 그냥 곱했어요. ${f(3,4)} × ${f(3,2)} = ${f(9,8)}`,`${f(9,8)}`)
+   : P(`${f(3,4)} × ${f(2,3)} = ${f(1,2)}`,`${f(1,2)}`)},
+  {id:"C3",kind:"calc",q:`6 ÷ ${f(1,2)}`,run:k=>
+    !k.procedure ? X("이건 어떻게 시작하는지 안 배웠어요.")
+   :!k.reciprocal? X(`뒤집는 걸 몰라서 그냥 곱했어요. 6 × ${f(1,2)} = 3`,"3")
+   : (k.meaning.has("partition")&&!k.meaning.has("measurement"))
+                 ? X("나눗셈은 똑같이 나눠 주는 거라고 배웠는데… <b>‘반 명’한테 어떻게 나눠 줘요?</b> 못 풀겠어요.")
+   :!k.magnitude ? X("6 × 2 = <b>12</b>가 나왔는데… 나눗셈인데 커지면 이상하잖아요. 제가 틀린 것 같아서 <b>3으로 고쳤어요.</b>","3")
+   : P(`6 안에 ${f(1,2)}이 12번 들어가요. 6 × ${f(2,1)} = 12`,"12")},
+  {id:"C4",kind:"calc",q:`${f(3,5)} ÷ 2`,run:k=>
+    !k.procedure ? X("이건 어떻게 시작하는지 안 배웠어요.")
+   :!k.reciprocal? X(`뒤집는 걸 몰라서 그냥 곱했어요. ${f(3,5)} × 2 = ${f(6,5)}`,`${f(6,5)}`)
+   :!k.whole     ? X("2는 분수가 아니라서 뒤집을 수가 없어요.")
+   : P(`2를 ${f(2,1)}로 보고 ${f(3,5)} × ${f(1,2)} = ${f(3,10)}`,`${f(3,10)}`)},
+  {id:"C5",kind:"calc",q:`5 ÷ ${f(5,6)}`,run:k=>
+    !k.procedure ? X("이건 어떻게 시작하는지 안 배웠어요.")
+   :!k.reciprocal? X(`뒤집는 걸 몰라서 그냥 곱했어요. 5 × ${f(5,6)} = ${f(25,6)}`,`${f(25,6)}`)
+   : (k.meaning.has("partition")&&!k.meaning.has("measurement"))
+                 ? X(`5를 <b>‘${f(5,6)}명’</b>에게 나눠 준다는 게 무슨 뜻인지 모르겠어요.`)
+   :!k.magnitude ? X(`5 × ${f(6,5)} = <b>6</b>인데 나눗셈인데 커져서 이상해요. <b>4로 고칠게요.</b>`,"4")
+   : P(`5 안에 ${f(5,6)}이 6번 들어가요. 5 × ${f(6,5)} = 6`,"6")},
+  {id:"M1",kind:"meaning",q:`6 ÷ ${f(1,2)} = 12 입니다. 나눗셈인데 왜 답이 더 커졌나요?`,run:k=>
+    !k.meaning.size ? X("나눗셈이 무슨 뜻인지 안 배워서 모르겠어요.")
+   : (k.meaning.has("partition")&&!k.meaning.has("measurement"))
+                 ? X("나눗셈은 똑같이 나눠 주는 거니까 작아져야 하는데… 왜 커지는지 <b>저도 모르겠어요.</b>")
+   : P(`나눗셈은 ‘안에 몇 번 들어가는가’예요. 6 안에 ${f(1,2)}짜리는 12개 들어가니까 커져요.`)},
+  {id:"M2",kind:"meaning",q:`${f(1,2)} ÷ 3 을 실생활 상황으로 설명해 보세요.`,run:k=>
+    !k.meaning.size ? X("나눗셈이 무슨 뜻인지 안 배웠어요.")
+   : P(`피자 반 판을 세 명이 똑같이 나눠 먹으면 한 명이 ${f(1,6)}판을 먹어요.`)},
+  {id:"T1",kind:"meaning",q:`친구가 6 ÷ ${f(1,2)} = 3 이라고 답했어요. 어디가 틀렸을까요?`,run:k=>
+    !k.meaning.has("measurement") ? X("음… 저도 <b>3이 맞는 것 같은데요?</b>","3이 맞다")
+   :!k.magnitude ? X("뭔가 이상한 건 알겠는데 왜 틀렸는지 설명은 못 하겠어요.")
+   : P(`친구는 ${f(1,2)}로 나누는 걸 2로 나누는 걸로 착각했어요. 1보다 작은 수로 나누면 답은 커져야 해요.`)},
+  {id:"E1",kind:"explain",q:`왜 나눗셈을 곱셈으로 바꾸고 뒤집나요?`,run:k=>
+    !k.justification ? X("그냥… <b>그렇게 하라고 배웠어요.</b>")
+   : P("나누는 수를 1로 만들려고요. 분자와 분모에 같은 수를 곱해도 값은 안 변하니까, 나누는 수의 역수를 곱하면 나누는 수가 1이 돼서 곱셈만 남아요.")},
+  {id:"E2",kind:"explain",q:`${f(3,4)} ÷ ${f(1,2)} 을 ‘뒤집어 곱하기’ 없이 풀 수 있나요?`,run:k=>
+    !k.meaning.has("measurement") ? X("<b>뒤집어 곱하는 방법밖에</b> 안 배웠어요.")
+   : P(`${f(3,4)} 안에 ${f(1,2)}이 몇 번 들어가는지 세면 돼요. ${f(1,2)}은 ${f(2,4)}니까 ${f(3,4)} 안에 한 번 하고 반 번 더 들어가요. 답은 1과 ${f(1,2)}.`)}
+ ],
+ ask:k=>
+   !k.procedure ? `선생님, 분수 나눗셈은 <b>어떻게 계산하는</b> 거예요? 아직 하나도 모르겠어요.`
+  :!k.reciprocal? `곱셈으로 바꾸라고 하셨는데, <b>정확히 뭘 어떻게</b> 바꾸는 거예요?`
+  :!k.whole     ? `선생님, <b>3처럼 분수가 아닌 수</b>가 나오면 어떡해요? 뒤집을 수가 없어요.`
+  :!k.magnitude ? `계산했더니 답이 <b>원래 수보다 커졌어요.</b> 나눗셈인데 커져도 되는 거예요? 이상해서 답을 고쳤어요.`
+  :!k.meaning.has("measurement") ? `계산은 다 맞아요. 그런데 나눗셈이 <b>무슨 뜻</b>인지는 모르겠어요. ‘나눠 준다’ 말고 다른 뜻이 있어요?`
+  :!k.justification ? `이제 뜻은 알겠어요. 그런데 <b>왜 하필 뒤집어서 곱하면</b> 되는 거예요?`
+  : `조금만 더 알려 주세요!`,
+ regressNote:`맞는 말을 가르쳤는데 점수가 떨어졌습니다. <b>불완전한 비유가 이미 작동하던 절차를 밀어낸</b> 것입니다 — 등분제는 분수 나눗셈을 설명하지 못하는데, 제자에게는 그게 절차보다 강했습니다.`,
+ regress:`‘똑같이 나눠 주기’로는 <b>반 명</b>한테 나눠 주는 걸 상상할 수가 없어요. 나눗셈에 다른 뜻도 있나요?`
+},
+
+/* ─── 2. 음수의 곱셈 ─── */
+{
+ id:"negmul", ex:["부호가 같으면 +, 다르면 −. 숫자끼리는 그냥 곱해."], nm:"음수의 곱셈", grade:"중1 · 수학",
+ ph:"예) 부호가 같으면 +, 다르면 −. 크기는 그냥 곱하면 돼.",
+ hello:`선생님, 저는 <b>음수를 곱하는 법을 모릅니다.</b> 양수 곱셈은 할 줄 아는데
+   마이너스가 붙으면 어떻게 되는지 하나도 모르겠어요.`,
+ slots:[
+  {key:"story", nm:"실생활 모형", hint:"음수를 곱한다는 게 현실에서 무슨 상황인지",
+   subs:[["debt","빚·온도 모형"],["reverse","방향 뒤집기 모형"]],
+   empty:"상황으로 설명하지 못함. <b>빚 모형만</b> 있으면 “빚을 <b>빚만큼</b> 곱한다는 게 무슨 뜻이에요?”라며 음수×음수를 거부",
+   affects:"M1, M2 / C2, C3, C5 회귀"},
+  {key:"sign", nm:"부호 규칙", hint:"답의 부호가 +인지 −인지 어떻게 정하는지",
+   empty:"아무것도 시작하지 못함", affects:"계산 전부"},
+  {key:"abs", nm:"크기 계산", hint:"부호를 뺀 숫자는 어떻게 계산하는지",
+   empty:"부호는 알아도 수를 못 구함", affects:"계산 전부"},
+  {key:"power", nm:"괄호와 거듭제곱", hint:"(−2)² 와 −2² 가 같은지 다른지",
+   empty:"−2² 을 <b>4</b>라고 답함 — 마이너스까지 제곱해 버림", affects:"C4, C5, T1"},
+  {key:"pattern", nm:"수의 규칙(패턴)", hint:"부호 규칙을 수의 흐름으로 보여줄 수 있는지",
+   empty:"“규칙으로 보여주는 건 안 배웠어요”", affects:"E1"},
+  {key:"proof", nm:"분배법칙 정당화", hint:"부호 규칙이 왜 그래야만 하는지",
+   empty:"“그렇게 정해진 거 아니에요?”", affects:"E2"}
+ ],
+ detect:[
+  {slot:"sign", re:/(같은|다른|서로)\s*부호|부호가?\s*(같|다르)|음수\s*(끼리|×|x|곱)|마이너스\s*(끼리|둘|두\s*개)|음수를?\s*(두\s*번|짝수|홀수)|[+플]러스가?\s*(돼|되|나)|양수가?\s*(돼|되|나)/},
+  {slot:"abs", re:/절댓?값|수의?\s*크기|숫자[^.。\n]{0,8}(곱|계산)|부호(는|를)?[^.。\n]{0,4}(빼고|떼고|먼저|따로|무시)|크기[^.。\n]{0,6}곱|수(끼리|만)[^.。\n]{0,6}곱/},
+  {slot:"power", re:/거듭제곱|괄호(가|는|에|를)?\s*(있|없|중요|봐|주의)|제곱[^.。\n]{0,16}(괄호|다르|주의|먼저|만)|[-−]\s*2\s*의?\s*제곱|지수/},
+  {slot:"pattern", re:/(규칙|패턴|수직선|표|수열)(을|를|으로|로|이|은)?[^.。\n]{0,16}(보|만들|이어|늘어|줄어|따라|쓰)|한\s*칸씩|2씩\s*(늘|커|커진|증가)|규칙적/},
+  {slot:"proof", re:/분배\s*법칙|분배법칙|0\s*=|0(이|을)\s*(되|만들|이용)|양변|덧셈의?\s*역원|항등|수학적으로\s*증명/},
+  {slot:"story:debt", re:/빚|부채|손해|잃|영하|온도[^.。\n]{0,12}(내려|떨어|낮)|마이너스\s*통장|적자/},
+  {slot:"story:reverse", re:/반대(의)?\s*반대|방향[^.。\n]{0,12}(바꾸|뒤집|반대|돌리|틀)|뒤집(으면|는|어|어서)|되돌|거꾸로[^.。\n]{0,8}(가|돌|간)|반대로\s*(가|돌|향|간)/}
+ ],
+ items:[
+  {id:"C1",kind:"calc",q:`(−3) × 4`,run:k=>
+    !k.sign ? X("부호를 어떻게 정하는지 안 배웠어요.")
+   :!k.abs  ? X("부호는 알겠는데 숫자는 어떻게 계산하는지 모르겠어요.")
+   : P("부호가 다르니까 −, 크기는 3 × 4 = 12. 답은 −12.","−12")},
+  {id:"C2",kind:"calc",q:`(−3) × (−4)`,run:k=>
+    !k.sign ? X("부호를 어떻게 정하는지 안 배웠어요.")
+   :!k.abs  ? X("부호는 알겠는데 숫자는 어떻게 계산하는지 모르겠어요.")
+   : (k.story.has("debt")&&!k.story.has("reverse"))
+            ? X("빚 3만원이 4번이면 −12만원, 그건 알겠어요. 그런데 <b>빚을 빚만큼 곱한다</b>는 게 무슨 뜻이에요? 상상이 안 돼서 못 하겠어요.")
+   : P("부호가 같으니까 +, 크기는 3 × 4 = 12. 답은 12.","12")},
+  {id:"C3",kind:"calc",q:`(−2) × (−5) × (−1)`,run:k=>
+    !k.sign ? X("부호를 어떻게 정하는지 안 배웠어요.")
+   :!k.abs  ? X("부호는 알겠는데 숫자는 어떻게 계산하는지 모르겠어요.")
+   : (k.story.has("debt")&&!k.story.has("reverse"))
+            ? X("여기도 <b>음수끼리 곱하는 자리</b>가 있어요. 빚에 빚을 곱하는 상황이 떠오르지 않아서 못 하겠어요.")
+   : P("음수가 세 개(홀수)니까 −, 크기는 2 × 5 × 1 = 10. 답은 −10.","−10")},
+  {id:"C4",kind:"calc",q:`−2²`,run:k=>
+    !k.sign ? X("부호를 어떻게 정하는지 안 배웠어요.")
+   :!k.abs  ? X("부호는 알겠는데 숫자는 어떻게 계산하는지 모르겠어요.")
+   :!k.power? X("마이너스도 같이 제곱되는 거 아니에요? (−2) × (−2) = <b>4</b>요.","4")
+   : P("괄호가 없으니까 제곱은 2에만 붙어요. −(2 × 2) = −4.","−4")},
+  {id:"C5",kind:"calc",q:`(−2)² × (−1)`,run:k=>
+    !k.sign ? X("부호를 어떻게 정하는지 안 배웠어요.")
+   :!k.abs  ? X("부호는 알겠는데 숫자는 어떻게 계산하는지 모르겠어요.")
+   :!k.power? X("괄호가 있는 것과 없는 것의 차이를 몰라서 못 풀겠어요.")
+   : (k.story.has("debt")&&!k.story.has("reverse"))
+            ? X("(−2)²은 (−2) × (−2)잖아요. <b>빚에 빚을 곱하는 걸</b> 상상할 수가 없어요.")
+   : P("(−2)² = 4, 4 × (−1) = −4.","−4")},
+  {id:"M1",kind:"meaning",q:`왜 음수 × 음수 = 양수인가요?`,run:k=>
+    k.story.has("reverse") ? P("음수를 곱하는 건 <b>방향을 반대로 뒤집는 것</b>이에요. 반대의 반대는 원래 방향이니까 양수가 돼요.")
+   : k.pattern ? P("3×(−2)=−6, 2×(−2)=−4, 1×(−2)=−2, 0×(−2)=0 … 한 칸씩 내려갈 때마다 2씩 커져요. 그다음은 (−1)×(−2)=+2일 수밖에 없어요.")
+   : X("부호 규칙은 외웠는데 <b>왜 그런지는 모르겠어요.</b>")},
+  {id:"M2",kind:"meaning",q:`(−3) × 4 를 실생활 상황으로 설명해 보세요.`,run:k=>
+    !k.story.size ? X("실생활 상황으로 바꾸는 건 안 배웠어요.")
+   : P("하루에 3만원씩 빚이 늘어나면 4일 뒤에는 −12만원이에요.")},
+  {id:"T1",kind:"meaning",q:`친구가 −2² = 4 라고 답했어요. 맞나요?`,run:k=>
+    !k.power ? X("음… 저도 <b>4가 맞는 것 같은데요?</b>","4가 맞다")
+   : P("틀렸어요. 괄호가 없으니 제곱은 2에만 붙어서 −2² = −4예요. 친구는 (−2)²와 헷갈린 거예요.")},
+  {id:"E1",kind:"explain",q:`음수 × 음수 = 양수를 <b>수의 규칙</b>으로 보여줄 수 있나요?`,run:k=>
+    !k.pattern ? X("규칙으로 보여주는 방법은 안 배웠어요.")
+   : P("(−2)를 곱한 값을 늘어놓으면 −6, −4, −2, 0 … 곱하는 수가 1씩 줄 때 결과는 2씩 커져요. 그 흐름을 그대로 이으면 (−1)×(−2)는 +2가 되어야 해요.")},
+  {id:"E2",kind:"explain",q:`부호 규칙을 <b>분배법칙</b>으로 정당화할 수 있나요?`,run:k=>
+    !k.proof ? X("그렇게 정해진 거 아니에요? 증명은 못 하겠어요.")
+   : P("0 = (−1) × (1 + (−1)) 인데, 분배법칙을 쓰면 0 = (−1)×1 + (−1)×(−1) = −1 + (−1)×(−1). 그러니까 (−1)×(−1)은 반드시 +1이어야 해요.")}
+ ],
+ ask:k=>
+   !k.sign ? `선생님, 마이너스가 붙으면 답의 <b>부호</b>는 어떻게 정해요?`
+  :!k.abs  ? `부호는 알겠어요. 그런데 <b>숫자 자체</b>는 어떻게 계산해요?`
+  :!k.power? `−2² 같은 건 어떻게 해요? <b>마이너스도 같이 제곱하는</b> 거죠?`
+  :!k.story.size ? `계산은 되는데, 음수를 곱한다는 게 <b>현실에서 무슨 상황</b>인지 모르겠어요.`
+  :!k.story.has("reverse") ? `빚으로는 음수 × 양수까지만 되네요. <b>음수 × 음수</b>는 어떤 상황이에요?`
+  :!k.pattern ? `왜 그런지 <b>수의 규칙으로</b> 보여줄 수도 있어요?`
+  :!k.proof ? `마지막으로, 부호 규칙을 <b>수학적으로 증명</b>할 수 있어요?`
+  : `조금만 더 알려 주세요!`,
+ regressNote:`빚 모형은 음수 × 양수까지만 늘어납니다. <b>비유가 깨지는 자리</b>를 제자가 먼저 만난 것이고, 이건 교사가 좋은 뜻으로 먼저 꺼내는 비유에서 늘 일어납니다.`,
+ regress:`빚으로는 <b>음수 × 음수</b>를 상상할 수가 없어요. 다른 방식으로 설명해 주실 수 있어요?`
+},
+
+/* ─── 3. 평균 ─── */
+{
+ id:"mean", ex:["평균은 다 더해서 개수로 나누면 돼."], nm:"평균", grade:"초5~6 · 수학",
+ ph:"예) 평균은 다 더해서 개수로 나누면 돼.",
+ hello:`선생님, 저는 <b>평균이 뭔지 모릅니다.</b> 시험지에 평균을 구하라고 되어 있는데
+   무엇부터 해야 하는지 하나도 모르겠어요.`,
+ slots:[
+  {key:"meaning", nm:"평균의 의미", hint:"평균이라는 값이 도대체 무엇을 나타내는지",
+   subs:[["leveling","고르게 만든 값"],["representative","자료를 대표하는 값"]],
+   empty:"의미를 묻는 문항에 답하지 못함. <b>‘고르게 만들기’만</b> 있으면 두 반의 평균을 그냥 가운데로 잡아 버림",
+   affects:"M1, M2, E1 / C5 회귀"},
+  {key:"procedure", nm:"계산 절차", hint:"평균을 실제로 어떻게 구하는지",
+   empty:"아무것도 시작하지 못함", affects:"계산 전부"},
+  {key:"countAll", nm:"0도 자료다", hint:"0점이나 빠진 값도 개수에 세는지",
+   empty:"“0은 없는 거니까 빼고 셀게요” — 0을 제외해 평균을 부풀림", affects:"C2"},
+  {key:"inverse", nm:"거꾸로 총합 구하기", hint:"평균에서 전체 합을 되찾을 수 있는지",
+   empty:"평균에서 총점을 역산하지 못함", affects:"C3, C4, C5"},
+  {key:"weight", nm:"자료 수가 다를 때", hint:"인원이 다른 두 집단의 평균을 합칠 수 있는지",
+   empty:"“두 반 평균이 80과 50이니까 <b>65</b>죠” — 평균의 평균 오류", affects:"C5, T1"},
+  {key:"limit", nm:"평균이 감추는 것", hint:"평균만으로 알 수 없는 것이 있는지",
+   empty:"“평균만 알면 충분한 거 아니에요?”", affects:"E2"}
+ ],
+ detect:[
+  {slot:"procedure", re:/(다|모두|전부)\s*더(해|하고)[^.。\n]{0,12}나누|합(을|계를)?[^.。\n]{0,10}(개수|자료의?\s*수|명)[^.。\n]{0,4}나누|총(합|점)[^.。\n]{0,10}나누|÷\s*(개수|명|자료)|더한\s*다음[^.。\n]{0,8}나누/},
+  {slot:"countAll", re:/0(점|도|을|은|이)[^.。\n]{0,16}(포함|세|넣|빼지|하나)|빠(뜨|트)리지\s*말|없는\s*값도|결석|0도\s*자료|0점도/},
+  {slot:"inverse", re:/평균\s*[×x*]\s*(개수|명|자료|사람)|(개수|명수?|사람\s*수)\s*[×x*]\s*평균|총(합|점)(은|을|이)[^.。\n]{0,16}평균|평균[^.。\n]{0,10}곱하면[^.。\n]{0,10}(합|총)|거꾸로|역으로/},
+  {slot:"weight", re:/(자료|사람|학생|인원|명)\s*수가?\s*(다르|같지|중요)|인원[^.。\n]{0,10}(다르|고려|반영|따라)|가중|각\s*반의?\s*(총점|합)[^.。\n]{0,14}(더|합)|평균의?\s*평균(은|이)?[^.。\n]{0,12}(아니|틀|안\s*돼)/},
+  {slot:"limit", re:/흩어|퍼져|분포|편차|같은\s*평균[^.。\n]{0,16}다를?|평균(만|으로)(는|만)?[^.。\n]{0,18}(알\s*수\s*없|판단|모자|부족|안\s*돼)|극단|치우|감추/},
+  {slot:"meaning:leveling", re:/고르게|균등|평평|똑같이\s*(만들|맞추)|높은\s*(건|것은|데는)\s*(깎|덜)|덜어(서|다)?[^.。\n]{0,8}(채|주|메)/},
+  {slot:"meaning:representative", re:/대표|대푯값|대표값|실제로\s*(있|존재)[^.。\n]{0,12}(아니|않|없)|없어도\s*(돼|된)|가상의?\s*값|하나의?\s*수로\s*나타/}
+ ],
+ items:[
+  {id:"C1",kind:"calc",q:`3, 7, 5 의 평균`,run:k=>
+    !k.procedure ? X("평균을 어떻게 구하는지 안 배웠어요.")
+   : P("3 + 7 + 5 = 15, 자료가 3개니까 15 ÷ 3 = 5.","5")},
+  {id:"C2",kind:"calc",q:`0, 4, 8 의 평균`,run:k=>
+    !k.procedure ? X("평균을 어떻게 구하는지 안 배웠어요.")
+   :!k.countAll  ? X("0은 아무것도 없는 거니까 빼고 셀게요. (4 + 8) ÷ 2 = <b>6</b>.","6")
+   : P("0도 하나의 자료예요. (0 + 4 + 8) ÷ 3 = 4.","4")},
+  {id:"C3",kind:"calc",q:`5명의 시험 평균이 8점입니다. 5명의 총점은?`,run:k=>
+    !k.procedure ? X("평균을 어떻게 구하는지 안 배웠어요.")
+   :!k.inverse   ? X("평균에서 <b>거꾸로</b> 총점을 구하는 건 안 배웠어요.")
+   : P("평균 × 사람 수 = 총합이니까 8 × 5 = 40점.","40")},
+  {id:"C4",kind:"calc",q:`4명의 평균이 12점이었는데, 한 명이 더 들어와 5명의 평균이 13점이 됐습니다. 새로 온 사람의 점수는?`,run:k=>
+    !k.procedure ? X("평균을 어떻게 구하는지 안 배웠어요.")
+   :!k.inverse   ? X("평균에서 <b>거꾸로</b> 총점을 구하는 건 안 배웠어요.")
+   : P("4명 총점 48점, 5명 총점 65점. 65 − 48 = 17점.","17")},
+  {id:"C5",kind:"calc",q:`1반 20명의 평균은 80점, 2반 10명의 평균은 50점. 두 반 전체의 평균은?`,run:k=>
+    !k.procedure ? X("평균을 어떻게 구하는지 안 배웠어요.")
+   :!k.inverse   ? X("각 반의 총점을 어떻게 구하는지 몰라서 못 하겠어요.")
+   : (k.meaning.has("leveling")&&!k.weight)
+                 ? X("평균은 고르게 만드는 거라고 배웠어요. 두 반을 고르게 만들면 80과 50의 <b>딱 가운데인 65점</b>이죠!","65")
+   : P("1반 총점 20 × 80 = 1600, 2반 총점 10 × 50 = 500. 합 2100을 30명으로 나누면 70점.","70")},
+  {id:"M1",kind:"meaning",q:`어느 반의 평균 키가 150cm입니다. 이 반에 키가 정확히 150cm인 사람이 반드시 있나요?`,run:k=>
+    !k.meaning.size ? X("평균이 무슨 뜻인지 안 배웠어요.")
+   :!k.meaning.has("representative")
+                 ? X("고르게 만든 값이니까 <b>다들 150cm가 되어야죠.</b> 당연히 있어요!","있다")
+   : P("없어도 돼요. 평균은 자료를 <b>대표하는 값</b>이지 실제로 존재하는 값은 아니에요. 149cm와 151cm뿐이어도 평균은 150cm예요.")},
+  {id:"M2",kind:"meaning",q:`평균이 ‘고르게 만든 값’이라는 게 무슨 뜻인가요?`,run:k=>
+    !k.meaning.has("leveling") ? X("‘고르게’가 무슨 뜻인지 안 배웠어요.")
+   : P("많은 데서 덜어다가 적은 데를 채워서 전부 같아지게 만든 값이에요.")},
+  {id:"T1",kind:"meaning",q:`친구가 “1반 평균 80, 2반 평균 50이니까 전체 평균은 65”라고 했어요. 맞나요?`,run:k=>
+    !k.weight ? X("음… 저도 <b>65가 맞는 것 같은데요?</b>","65가 맞다")
+   : P("틀렸어요. 1반은 20명, 2반은 10명이라 인원이 달라요. 사람 수가 다르면 평균끼리 그냥 평균 낼 수 없어요. 정답은 70점이에요.")},
+  {id:"E1",kind:"explain",q:`왜 다 더해서 개수로 나누면 ‘고르게 나눈 값’이 되나요?`,run:k=>
+    (!k.meaning.has("leveling")||!k.procedure) ? X("왜 그렇게 되는지는 못 배웠어요.")
+   : P("다 더하면 전체 양이 되고, 그걸 사람 수로 똑같이 다시 나눠 주면 모두 같은 양을 갖게 돼요. 그게 ‘고르게 만든 값’이에요.")},
+  {id:"E2",kind:"explain",q:`평균 하나만 보고 반 전체를 판단하면 안 되는 이유는?`,run:k=>
+    !k.limit ? X("평균만 알면 충분한 거 아니에요?")
+   : P("평균이 같아도 흩어진 정도가 다를 수 있어요. 모두 70점인 반과 40점·100점이 섞인 반은 평균이 같지만 전혀 다른 반이에요.")}
+ ],
+ ask:k=>
+   !k.procedure ? `선생님, 평균은 <b>어떻게 구하는</b> 거예요?`
+  :!k.countAll  ? `시험지에 <b>0점</b>이 있는데요, 0은 없는 거니까 빼고 세도 되죠?`
+  :!k.inverse   ? `평균을 아는데 <b>총점</b>을 물어보면 어떻게 해요? 거꾸로도 되나요?`
+  :!k.meaning.size ? `계산은 다 맞았어요. 그런데 평균이라는 값이 <b>무엇을 뜻하는지</b>는 모르겠어요.`
+  :!k.weight    ? `두 반의 평균을 합칠 때 그냥 가운데로 하면 안 되나요? 뭔가 걸리는데 이유를 모르겠어요.`
+  :!k.meaning.has("representative") ? `평균 키가 150cm면 <b>150cm인 사람이 꼭 있어야</b> 하는 거 아니에요?`
+  :!k.limit     ? `평균만 알면 그 반에 대해 다 안 거죠? 아닌가요?`
+  : `조금만 더 알려 주세요!`,
+ regressNote:`‘고르게 만들기’는 평균의 올바른 뜻이지만, 인원이 다를 때는 <b>그 직관이 계산을 덮어씁니다.</b> 제자는 방금 전까지 정확히 70을 구하고 있었습니다.`,
+ regress:`‘고르게 만들기’로 생각하니까 두 반을 그냥 가운데로 합쳐 버렸어요. 인원이 다를 때는 어떻게 해요?`
+}
+,
+/* ─── 4. 과학 · 힘과 운동 ─── */
+{
+ id:"force", ex:["힘은 질량 곱하기 가속도야. F = ma 로 쓰면 돼."], nm:"힘과 운동", grade:"중1 · 과학",
+ kinds:{calc:"적용", meaning:"의미", explain:"설명"},
+ kindsS:{calc:"해보기", meaning:"알기", explain:"설명하기"},
+ ph:"예) 힘 = 질량 × 가속도야. F = ma 로 쓰면 돼.",
+ hello:`선생님, 저는 <b>힘이 뭔지 모릅니다.</b> 물체가 왜 움직이고 왜 멈추는지,
+   공식도 원리도 하나도 안 배웠어요.`,
+ slots:[
+  {key:"pairs", nm:"작용과 반작용", hint:"내가 벽을 밀면 벽도 나를 미는지",
+   subs:[["same","크기가 같고 방향이 반대"],["twoBodies","서로 다른 물체에 작용한다"]],
+   empty:"벽 밀기 문항에 답하지 못함. <b>‘크기가 같고 반대’만</b> 있으면 “모든 힘은 짝이 있어 상쇄되니까 <b>아무것도 가속될 수 없어요</b>”라며 F=ma 문항 전체를 거부",
+   affects:"E2 / C1~C4 회귀"},
+  {key:"formula", nm:"힘의 공식", hint:"힘·질량·가속도의 관계를 식으로",
+   empty:"수치 문항을 아무것도 계산하지 못함", affects:"적용 C1~C4"},
+  {key:"unit", nm:"단위 다루기", hint:"N, kg, m/s² 를 어떻게 쓰는지",
+   empty:"“숫자는 나왔는데 단위를 뭐라고 써야 할지 모르겠어요”", affects:"C1, C2, C3"},
+  {key:"inertia", nm:"관성", hint:"힘이 없으면 물체는 어떻게 되는지",
+   empty:"“움직이고 있으니까 힘이 작용하고 있는 거 아니에요?” — 등속운동을 설명하지 못함", affects:"M1, M2, E1"},
+  {key:"friction", nm:"마찰과 저항", hint:"현실에서 물체가 멈추는 진짜 이유",
+   empty:"공기 저항을 고려하지 못해 깃털과 쇠구슬을 구분하지 못함", affects:"T1"},
+  {key:"gravityFall", nm:"낙하와 무게", hint:"무거운 것이 정말 빨리 떨어지는지",
+   empty:"“무거우니까 더 빨리 떨어지죠” — 대표 오개념", affects:"C5, T1"}
+ ],
+ detect:[
+  {slot:"formula", re:/F\s*=\s*m\s*a|힘\s*=\s*질량\s*[×x*]\s*가속도|가속도\s*=\s*힘[^.。\n]{0,6}(나누|÷|\/)|질량\s*[×x*]\s*가속도|뉴턴의?\s*(제)?\s*2\s*법칙|가속도(는|가)[^.。\n]{0,12}(반비례|비례)/},
+  {slot:"unit", re:/뉴턴|\bN\b|kg|킬로그램|m\/s|단위(는|를|가)?/},
+  {slot:"inertia", re:/관성|힘이?\s*(없|안)[^.。\n]{0,12}(그대로|계속|등속|유지|멈추지)|운동\s*상태[^.。\n]{0,10}유지|알짜힘[^.。\n]{0,8}0[^.。\n]{0,16}(등속|정지|유지|변하지)|힘은\s*속도[^.。\n]{0,10}(변화|바꾸|아니)|속도의?\s*변화(를|가)/},
+  {slot:"friction", re:/마찰|공기\s*저항|저항(력|이|을)|바닥[^.。\n]{0,8}(걸리|잡)/},
+  {slot:"gravityFall", re:/무게[^.。\n]{0,16}(상관|관계|무관|영향\s*(이\s*)?없)|무거(운|워)[^.。\n]{0,18}(똑같|같이|동시|아니|먼저\s*떨어지지)|같은\s*(속도|빠르기)로\s*떨어|중력\s*가속도|자유\s*낙하|동시에\s*떨어/},
+  {slot:"pairs:same", re:/작용[^.。\n]{0,6}반작용|반작용|크기(가|는)?\s*같고\s*방향/},
+  {slot:"pairs:twoBodies", re:/(서로\s*)?다른\s*물체|두\s*물체(에|에게)|같은\s*물체[^.。\n]{0,8}아니|상쇄되지\s*않|서로\s*다른\s*대상/}
+ ],
+ items:[
+  {id:"C1",kind:"calc",q:`질량 2 kg 인 물체에 6 N 의 힘을 주면 가속도는?`,run:k=>
+    !k.formula ? X("힘과 가속도의 관계를 안 배웠어요.")
+   : (k.pairs.has("same")&&!k.pairs.has("twoBodies"))
+              ? X("잠깐만요… 모든 힘에는 <b>반작용</b>이 있다면서요. 그럼 6 N 도 상쇄돼서 <b>알짜힘이 0</b> 아니에요? 가속도는 0이어야 하는데요.","0")
+   :!k.unit   ? X("6 ÷ 2 = 3 인 건 알겠는데 <b>단위를 뭐라고 써야 할지</b> 모르겠어요.","3")
+   : P("a = F / m = 6 ÷ 2 = 3 m/s².","3 m/s²")},
+  {id:"C2",kind:"calc",q:`질량 4 kg 인 물체를 0.5 m/s² 로 가속시키려면 얼마의 힘이 필요한가?`,run:k=>
+    !k.formula ? X("힘과 가속도의 관계를 안 배웠어요.")
+   : (k.pairs.has("same")&&!k.pairs.has("twoBodies"))
+              ? X("힘을 주면 반작용이 똑같이 되받아치잖아요. <b>어차피 상쇄될 텐데</b> 계산이 무슨 의미가 있어요?")
+   :!k.unit   ? X("4 × 0.5 = 2 인데 <b>단위를 모르겠어요.</b>","2")
+   : P("F = ma = 4 × 0.5 = 2 N.","2 N")},
+  {id:"C3",kind:"calc",q:`12 N 의 힘으로 밀었더니 3 m/s² 로 가속되었습니다. 물체의 질량은?`,run:k=>
+    !k.formula ? X("힘과 가속도의 관계를 안 배웠어요.")
+   : (k.pairs.has("same")&&!k.pairs.has("twoBodies"))
+              ? X("반작용 때문에 알짜힘이 0이라면 <b>가속도 3 m/s² 이라는 조건 자체가 말이 안 되잖아요.</b>")
+   :!k.unit   ? X("12 ÷ 3 = 4 인데 <b>단위를 모르겠어요.</b>","4")
+   : P("m = F / a = 12 ÷ 3 = 4 kg.","4 kg")},
+  {id:"C4",kind:"calc",q:`같은 크기의 힘으로 밀 때 질량이 3배가 되면 가속도는 어떻게 되나요?`,run:k=>
+    !k.formula ? X("힘과 가속도의 관계를 안 배웠어요.")
+   : (k.pairs.has("same")&&!k.pairs.has("twoBodies"))
+              ? X("힘이 다 상쇄된다면 질량이 몇 배든 <b>가속도는 늘 0</b> 아닌가요?","0")
+   : P("a = F / m 이니까 질량이 3배면 가속도는 1/3배가 돼요.","1/3배")},
+  {id:"C5",kind:"calc",q:`쇠구슬과 나무구슬을 같은 높이에서 동시에 놓으면 어느 쪽이 먼저 바닥에 닿나요?`,run:k=>
+    !k.gravityFall ? X("<b>쇠구슬이요.</b> 더 무거우니까 더 빨리 떨어지죠.","쇠구슬")
+   : P("동시에 닿아요. 낙하는 무게와 상관없이 같은 중력 가속도로 일어나요.","동시")},
+  {id:"M1",kind:"meaning",q:`일정한 속도로 굴러가는 수레에 작용하는 알짜힘은 얼마인가요?`,run:k=>
+    !k.inertia ? X("<b>움직이고 있으니까 힘이 작용하고 있는 거 아니에요?</b> 0은 아닐 것 같은데요.","0이 아니다")
+   : P("0이에요. 알짜힘이 0이면 물체는 정지해 있거나 <b>등속으로 계속 움직여요.</b> 속도가 변하지 않으니 힘이 필요 없어요.","0")},
+  {id:"M2",kind:"meaning",q:`우주 공간에서 로켓이 엔진을 끄면 어떻게 되나요?`,run:k=>
+    !k.inertia ? X("엔진을 끄면 힘이 없어지니까 <b>곧 멈추겠죠.</b>","멈춘다")
+   : P("그대로 같은 속도로 계속 나아가요. 힘이 없으면 운동 상태가 유지되니까요.","등속으로 계속 간다")},
+  {id:"T1",kind:"meaning",q:`친구가 “깃털보다 쇠구슬이 빨리 떨어지니까 무거운 게 빨리 떨어지는 게 맞다”고 해요.`,run:k=>
+    !k.gravityFall ? X("음… 저도 친구 말이 맞는 것 같은데요?","친구가 맞다")
+   :!k.friction   ? X("무게랑 상관없다고 배웠으니 <b>깃털도 똑같이 떨어져야</b> 하는데… 실제로는 아니잖아요. 설명을 못 하겠어요.")
+   : P("무게 때문이 아니라 <b>공기 저항</b> 때문이에요. 깃털은 넓고 가벼워서 공기 저항을 크게 받아요. 공기가 없는 곳에서는 둘이 동시에 떨어져요.")},
+  {id:"E1",kind:"explain",q:`힘과 속도의 관계를 한 문장으로 말해 보세요.`,run:k=>
+    !k.inertia ? X("힘이 셀수록 빨리 움직이는 거… 아니에요?")
+   : P("힘은 속도를 만드는 게 아니라 <b>속도의 변화</b>를 만들어요. 힘이 없으면 속도는 그대로 유지돼요.")},
+  {id:"E2",kind:"explain",q:`내가 벽을 밀면 벽도 나를 민다는데, 그럼 나는 어떻게 앞으로 갈 수 있나요?`,run:k=>
+    !k.pairs.has("twoBodies") ? X("<b>저도 그게 이상해요.</b> 힘이 같으면 아무도 못 움직이는 거 아니에요?")
+   : P("두 힘은 <b>서로 다른 물체</b>에 작용해요. 내가 벽에 준 힘은 벽에, 벽이 준 힘은 나에게 작용하죠. 한 물체에 걸린 힘끼리만 상쇄되니까 나는 뒤로 밀려 나갈 수 있어요.")}
+ ],
+ ask:k=>
+   !k.formula ? `선생님, 힘하고 가속도는 <b>어떤 관계</b>예요? 계산할 방법이 있어요?`
+  :!k.unit    ? `숫자는 나왔는데 <b>단위</b>를 뭐라고 써야 해요?`
+  :!k.gravityFall ? `무거운 물체가 더 빨리 떨어지는 거 맞죠? 그건 당연한 거 같은데요.`
+  :!k.inertia ? `공식은 굴릴 수 있는데요… <b>움직이는 물체엔 힘이 작용하고 있는 거</b> 아니에요?`
+  :!k.friction? `무게랑 상관없다면 <b>깃털</b>은 왜 천천히 떨어져요?`
+  :!k.pairs.size ? `제가 벽을 밀면 벽은 가만히 있잖아요. 벽도 저를 밀어요?`
+  :!k.pairs.has("twoBodies") ? `힘의 크기가 같으면 <b>다 상쇄돼서</b> 아무것도 못 움직이는 거 아니에요?`
+  : `조금만 더 알려 주세요!`,
+ regressNote:`작용·반작용을 ‘크기가 같고 방향이 반대’로만 배우면 <b>힘의 평형과 헷갈립니다.</b> 물리 교육에서 가장 유명한 혼동이고, 제자는 그 즉시 F = ma 전체를 포기했습니다.`,
+ regress:`모든 힘에 반작용이 있다면 <b>알짜힘은 언제나 0</b>이잖아요. 그럼 F = ma 를 어떻게 쓰라는 거예요?`
+},
+
+/* ─── 5. 국어 · 주장과 근거 ─── */
+{
+ id:"claim", ex:["주장은 글쓴이가 내세우는 생각이고, 근거는 왜냐하면 뒤에 오는 이유야."], nm:"주장과 근거", grade:"초5~6 · 국어",
+ kinds:{calc:"판별", meaning:"판단", explain:"설명"},
+ kindsS:{calc:"가려내기", meaning:"따져보기", explain:"설명하기"},
+ ph:"예) 주장은 ‘~해야 한다’ 같은 글쓴이의 생각이고, 근거는 ‘왜냐하면’ 뒤에 오는 이유야.",
+ hello:`선생님, 저는 글을 읽을 줄은 아는데 <b>주장이 뭐고 근거가 뭔지 모릅니다.</b>
+   어떤 게 좋은 근거인지도 전혀 모르겠어요.`,
+ slots:[
+  {key:"overgen", nm:"사례와 전체", hint:"몇 개의 사례로 전체를 말할 수 있는지",
+   subs:[["beware","성급한 일반화를 경계하기"],["sample","표본이 크고 대표성 있으면 근거가 된다"]],
+   empty:"성급한 일반화를 알아채지 못함. <b>‘경계하기’만</b> 있으면 <b>제대로 된 통계 조사까지 거부</b>",
+   affects:"M1 / T1 회귀"},
+  {key:"distinguish", nm:"주장과 근거 구분", hint:"글에서 무엇이 주장이고 무엇이 근거인지",
+   empty:"둘을 구분하지 못해 아무 문장이나 고름", affects:"C1, C2"},
+  {key:"factOpinion", nm:"사실과 의견", hint:"확인할 수 있는 말과 생각을 어떻게 가르는지",
+   empty:"“다 그냥 문장 아니에요?”", affects:"C3, C4"},
+  {key:"relevance", nm:"근거의 관련성", hint:"근거가 주장과 이어져 있어야 하는지",
+   empty:"엉뚱한 근거도 근거로 인정함", affects:"C5, E1"},
+  {key:"source", nm:"근거의 출처", hint:"그 말을 누가 어디서 했는지 따지는지",
+   empty:"“어디서 봤대요”도 그대로 믿음", affects:"M2, T1, E1"},
+  {key:"counter", nm:"반대 입장 살피기", hint:"내 주장에 반대하는 말을 왜 들어야 하는지",
+   empty:"“반대하는 사람 말을 왜 들어요?”", affects:"E2"}
+ ],
+ detect:[
+  {slot:"distinguish", re:/주장[^.。\n]{0,12}근거|근거[^.。\n]{0,12}주장|해야\s*한다[^.。\n]{0,12}주장|왜냐하면|글쓴이의?\s*(생각|의견)[^.。\n]{0,8}주장|이유(가|를|는)[^.。\n]{0,8}근거/},
+  {slot:"factOpinion", re:/사실[^.。\n]{0,12}(의견|생각)|의견[^.。\n]{0,12}사실|확인할\s*수\s*있|측정|조사(하|해)[^.。\n]{0,8}(확인|알)|느낌|좋다\s*싫다|판단이?\s*들어/},
+  {slot:"relevance", re:/관련(이|있|없|성|되)|상관(이|없|있)|주장(과|하고|이랑)[^.。\n]{0,10}(이어|연결|관련|맞)|엉뚱|딴\s*(소리|얘기)|무관/},
+  {slot:"source", re:/출처|어디서\s*(나온|가져|봤)|믿을\s*만|신뢰|전문가|공식\s*기관|누가\s*(말|조사|썼)|블로그[^.。\n]{0,12}(믿|안\s*돼|못)/},
+  {slot:"counter", re:/반대\s*(의견|하는|편|쪽|입장|되는|말|주장)|반론|다른\s*생각(도|을)|비판[^.。\n]{0,10}(들어|살펴|받아)|양쪽(을|의)?/},
+  {slot:"overgen:beware", re:/성급한?\s*일반화|몇\s*(명|개|사람|가지)[^.。\n]{0,18}(전체|모두|다\s*그렇)|일부(로|만|를)[^.。\n]{0,16}(전체|모두)|친구\s*몇|섣불리|주변\s*사람\s*몇/},
+  {slot:"overgen:sample", re:/표본|조사\s*(인원|대상|규모|수)|(많은|충분한)\s*(수|사람|자료|인원)|대표성|무작위|전국[^.。\n]{0,12}조사|수가?\s*많(으면|아|고)|제대로\s*(된|한)\s*조사/}
+ ],
+ items:[
+  {id:"C1",kind:"calc",q:`「학교 급식에 채소를 늘려야 한다. 왜냐하면 채소에는 비타민이 많기 때문이다.」 — <b>주장</b>은 무엇인가요?`,run:k=>
+    !k.distinguish ? X("둘 다 그냥 문장 같은데… 어느 쪽인지 모르겠어요.")
+   : P("‘학교 급식에 채소를 늘려야 한다’가 주장이에요. 글쓴이가 <b>하자고 내세우는 생각</b>이니까요.")},
+  {id:"C2",kind:"calc",q:`위 글에서 <b>근거</b>는 무엇인가요?`,run:k=>
+    !k.distinguish ? X("어느 문장이 근거인지 모르겠어요.")
+   : P("‘채소에는 비타민이 많다’가 근거예요. ‘왜냐하면’ 뒤에 오는 <b>이유</b>니까요.")},
+  {id:"C3",kind:"calc",q:`「지구의 평균 기온은 100년 전보다 약 1.1℃ 올랐다.」 — 사실인가요, 의견인가요?`,run:k=>
+    !k.factOpinion ? X("잘 모르겠어요. 둘이 어떻게 다른지 안 배웠어요.")
+   : P("사실이에요. 측정해서 <b>확인할 수 있는</b> 내용이니까요.","사실")},
+  {id:"C4",kind:"calc",q:`「우리 반은 체육을 제일 좋아한다.」 — 사실인가요, 의견인가요?`,run:k=>
+    !k.factOpinion ? X("잘 모르겠어요. 둘이 어떻게 다른지 안 배웠어요.")
+   : P("조사한 적이 없다면 의견이에요. ‘제일 좋아한다’는 글쓴이의 <b>느낌</b>이니까요. 설문으로 확인했다면 사실이 되고요.","의견")},
+  {id:"C5",kind:"calc",q:`「교복을 없애야 한다. 왜냐하면 우리 학교 급식이 맛없기 때문이다.」 — 이 근거의 문제는?`,run:k=>
+    !k.relevance ? X("근거가 있긴 있으니까 <b>괜찮은 것 같은데요?</b>","문제 없다")
+   : P("근거가 주장과 <b>관련이 없어요.</b> 급식 맛은 교복 문제와 이어지지 않아요.")},
+  {id:"M1",kind:"meaning",q:`「내 친구 3명이 모두 게임을 좋아한다. 그러니 요즘 초등학생은 모두 게임 중독이다.」 — 어디가 잘못됐나요?`,run:k=>
+    !k.overgen.has("beware") ? X("친구들한테 직접 물어본 거니까 <b>확실한 근거 아니에요?</b>","문제 없다")
+   : P("친구 3명은 <b>전체 초등학생을 대표하지 못해요.</b> 몇 개의 사례로 전체를 단정하는 건 성급한 일반화예요.")},
+  {id:"M2",kind:"meaning",q:`「어떤 블로그에서 봤는데 우유가 몸에 나쁘대.」 — 이 근거를 믿어도 될까요?`,run:k=>
+    !k.source ? X("글에 쓰여 있으니까 <b>맞는 말이겠죠.</b>","믿어도 된다")
+   : P("누가 쓴 글인지, 무엇을 바탕으로 한 말인지 모르니 그대로 믿기 어려워요. <b>출처</b>를 확인해야 해요.")},
+  {id:"T1",kind:"meaning",q:`「전국 초등학생 3천 명을 조사했더니 68%가 하루 1시간 이상 게임을 한다.」 — 믿을 만한 근거인가요?`,run:k=>
+    !k.source ? X("숫자가 있으니까… 잘 모르겠어요. 뭘 봐야 하는지 안 배웠어요.")
+   : (k.overgen.has("beware")&&!k.overgen.has("sample"))
+              ? X("어? 3천 명도 결국 <b>일부 사례</b>잖아요. 몇 명 가지고 전체를 말하면 안 된다고 배웠으니까 <b>이것도 성급한 일반화예요.</b> 못 믿겠어요.","못 믿는다")
+   : P("믿을 만해요. 전국에서 3천 명이면 <b>표본이 크고 대표성</b>도 있어요. 조사 기관과 방법까지 밝혀져 있으면 더 좋고요.","믿을 만하다")},
+  {id:"E1",kind:"explain",q:`좋은 근거가 갖춰야 할 조건을 말해 보세요.`,run:k=>
+    (!k.relevance||!k.source) ? X("음… <b>이유가 붙어 있기만 하면</b> 되는 거 아니에요?")
+   : P("첫째, 주장과 <b>관련</b>이 있어야 해요. 둘째, <b>출처</b>가 분명하고 믿을 만해야 해요. 그래야 읽는 사람이 확인할 수 있어요.")},
+  {id:"E2",kind:"explain",q:`내 주장에 반대하는 사람의 말을 왜 들어야 하나요?`,run:k=>
+    !k.counter ? X("제 주장이 맞는데 <b>반대하는 사람 말을 왜 들어요?</b>")
+   : P("반대 의견을 미리 살펴야 내 주장의 약한 곳을 알 수 있고, 그걸 보완하면 <b>더 설득력 있는 글</b>이 돼요.")}
+ ],
+ ask:k=>
+   !k.distinguish ? `선생님, 글에서 <b>어떤 게 주장이고 어떤 게 근거</b>예요?`
+  :!k.factOpinion ? `<b>사실</b>이랑 <b>의견</b>은 어떻게 갈라요? 다 그냥 문장 같은데요.`
+  :!k.relevance   ? `이유만 붙어 있으면 다 근거 아니에요? 뭔가 더 봐야 해요?`
+  :!k.overgen.size? `형식은 이제 다 가려낼 수 있어요. 그런데 그 근거가 <b>좋은 근거인지</b>는 어떻게 알아요?`
+  :!k.source      ? `“어디서 봤대”라는 말도 근거로 쳐도 돼요?`
+  :!k.overgen.has("sample") ? `그럼 <b>3천 명 조사</b>도 결국 사례니까 못 믿는 거죠?`
+  :!k.counter     ? `제 주장이 맞으면 된 거 아니에요? <b>반대 의견</b>까지 봐야 해요?`
+  : `조금만 더 알려 주세요!`,
+ regressNote:`앞의 회귀들과 <b>종류가 다릅니다.</b> 여기서 깨진 건 비유가 아니라 <b>비판 규칙의 과잉 적용</b>입니다 — 의심하는 법만 배우고 <b>언제 믿어도 되는지</b>를 못 배우면 판단이 멈춥니다. 인문·사회 영역에서 더 자주 나타날 유형입니다.`,
+ regress:`‘몇 개 사례로 전체를 말하면 안 된다’고 배웠더니 <b>제대로 된 조사까지 다 못 믿겠어요.</b> 어디까지 의심해야 해요?`
+}
+];
+
+let DEN = "student";
+const isS = ()=> DEN==="student";
+const tw  = (t,s)=> isS()? s : t;
+const ORD = ["","첫","두","세","네","다섯","여섯","일곱","여덟","아홉","열"];
+const ord = n => (ORD[n]||n) + " 번째";
+const DEFKIND  = { calc:"계산", meaning:"의미", explain:"설명" };
+const DEFKINDS = { calc:"풀기", meaning:"알기", explain:"설명하기" };
+const kindNm = k => isS() ? (C().kindsS||DEFKINDS)[k] : (C().kinds||DEFKIND)[k];
+
+/* ══════════════════════ 상태 ══════════════════════ */
+function blankK(c){ const k={}; c.slots.forEach(s=> k[s.key] = s.subs ? new Set() : false); return k; }
+function newState(c){ return { K:blankK(c), history:[], last:null, exams:0, pending:[], tape:[], partial:{}, t0:Date.now() }; }
+const ST = {}; CONCEPTS.forEach(c=> ST[c.id] = newState(c));
+let CID = CONCEPTS[0].id;
+const C  = ()=> CONCEPTS.find(c=>c.id===CID);
+const S  = ()=> ST[CID];
+
+const $  = s=>document.querySelector(s);
+const $$ = s=>Array.from(document.querySelectorAll(s));
+const esc = s=>String(s).replace(/[&<>]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;"}[c]));
+
+/* ═════════════ 제자 — 한 장의 백지 ═════════════ */
+function learnedCount(){
+  const c=C(), K=S().K;
+  return c.slots.filter(s=> s.subs ? K[s.key].size>0 : !!K[s.key]).length;
+}
+function pupil(state, filled){
+  const I="var(--ink-1)";
+  const sheet = `<path d="M16,5 H49 L67,23 V77 A5,5 0 0 1 62,82 H16 A5,5 0 0 1 11,77 V10 A5,5 0 0 1 16,5 Z"
+      fill="var(--card)" stroke="${I}" stroke-width="2.4" stroke-linejoin="round"/>
+    <path d="M49,5 L67,23 H54 A5,5 0 0 1 49,18 Z" fill="var(--sunk)" stroke="${I}" stroke-width="2.2" stroke-linejoin="round"/>`;
+
+  /* 배운 만큼 쌓이는 연필 자국 (최대 6) */
+  let marks = `<path d="M20,64 H58 M20,72 H58" stroke="var(--rule)" stroke-width="1.6" stroke-linecap="round"/>`;
+  for(let i=0;i<Math.min(filled,6);i++){
+    const x = 20 + (i%3)*14, y = i<3 ? 64 : 72;
+    marks += `<path d="M${x},${y} h10" stroke="var(--s1)" stroke-width="2.6" stroke-linecap="round" opacity=".85"/>`;
+  }
+
+  const dot=(x,y)=>`<circle cx="${x}" cy="${y}" r="2.7" fill="${I}"/>`;
+  const arc=(x,y)=>`<path d="M${x-4.5},${y+1.5} q4.5,-5.5 9,0" stroke="${I}" stroke-width="2.4" fill="none" stroke-linecap="round"/>`;
+  let eyes, mouth, extra="", blinky=true;
+
+  if(state==="blank"){
+    eyes = dot(31,40)+dot(47,40);
+    mouth = `<path d="M33,53 h12" stroke="${I}" stroke-width="2.4" stroke-linecap="round"/>`;
+  } else if(state==="think"){
+    eyes = dot(31,37)+dot(47,37);
+    mouth = `<path d="M34,53 q5,-3.5 10,0" stroke="${I}" stroke-width="2.4" fill="none" stroke-linecap="round"/>`;
+    extra = `<circle cx="60" cy="34" r="2.4" fill="var(--s1)"/><circle cx="66" cy="28" r="1.6" fill="var(--s1)" opacity=".65"/>`;
+  } else if(state==="happy"){
+    eyes = arc(31,40)+arc(47,40); blinky=false;
+    mouth = `<path d="M31,50 q8,7.5 16,0" stroke="${I}" stroke-width="2.4" fill="none" stroke-linecap="round"/>`;
+  } else if(state==="proud"){
+    eyes = arc(31,40)+arc(47,40); blinky=false;
+    mouth = `<path d="M30,49 q9,9.5 18,0" stroke="${I}" stroke-width="2.4" fill="none" stroke-linecap="round"/>`;
+    extra = `<path d="M6,30 l5,-2.5 M72,30 l-5,-2.5 M39,-1 v4" stroke="var(--s3)" stroke-width="2.4" stroke-linecap="round"/>`;
+  } else { /* confused */
+    eyes = dot(31,41)+dot(47,41);
+    mouth = `<path d="M31,54 q4,-4.5 8,0 q4,4.5 8,0" stroke="${I}" stroke-width="2.4" fill="none" stroke-linecap="round"/>`;
+    extra = `<path d="M25,31 l9,-3.5 M53,31 l-9,-3.5" stroke="${I}" stroke-width="2.2" stroke-linecap="round"/>
+      <ellipse cx="52" cy="70" rx="7" ry="4" fill="var(--ink-3)" opacity=".18"/>`;
+  }
+  return `<svg class="pface" viewBox="-5 -8 84 98" width="100%" height="100%" aria-hidden="true">
+    ${sheet}${marks}<g class="${blinky?"blinky":""}">${eyes}</g>${mouth}${extra}</svg>`;
+}
+function setPupil(state, html){
+  $("#ava").className = "avatar " + (state==="blank"?"":state);
+  $("#ava").innerHTML = pupil(state, learnedCount());
+  $("#says").innerHTML = html;
+}
+
+/* ══════════════════════ 온보딩 (학생 모드 첫 30초) ══════════════════════ */
+let OB = 3;   // 0 만나기 · 1 첫 가르침 · 2 첫 시험 · 3 완료
+let obSeen = false;   // 세션당 한 번만 — 개념을 바꿔도 다시 나오지 않는다
+function obActive(){ return isS() && OB < 3; }
+function setOB(n, animate){
+  OB = n; if(n>=3) obSeen = true;
+  const a = obActive();
+  document.querySelector(".stage").classList.toggle("ob", a);
+  $("#picker").classList.toggle("hide", a);
+  $("#colR").classList.toggle("hide", a);
+  $("#tapeCard").classList.toggle("hide", a);
+  $("#teachArea").classList.toggle("hide", a && n===0);
+  $("#obStart").classList.toggle("hide", !(a && n===0));
+  $("#obEx").classList.toggle("hide", !(a && n===1));
+  $("#ava").classList.toggle("big", a && n<2);
+  $("#examBtn").classList.toggle("key", a && n===2);
+  if(animate){ ["#picker","#colR","#tapeCard"].forEach(sel=>{
+      const el=$(sel); el.classList.remove("revealed"); void el.offsetWidth; el.classList.add("revealed"); }); }
+  if(a && n===1){
+    const ex = (C().ex||[]);
+    $("#obExRow").innerHTML = ex.map((t,i)=>`<button class="exchip" data-ex="${i}">${esc(t)}</button>`).join("");
+  }
+}
+function obReset(){
+  if(!isS() || obSeen){ setOB(3); return; }
+  const st=S();
+  const untouched = !st.exams && Object.keys(st.partial||{}).length===0 && learnedCount()===0;
+  setOB(untouched ? 0 : 3);
+}
+$("#obGo").onclick = ()=>{ setOB(1); $("#tin").focus(); };
+$("#obSkip").onclick = ()=> setOB(3, true);
+$("#obExRow").addEventListener("click", e=>{
+  const b=e.target.closest("[data-ex]"); if(!b) return;
+  $("#tin").value = (C().ex||[])[+b.dataset.ex] || "";
+  $("#tin").dispatchEvent(new Event("input")); $("#tin").focus();
+});
+
+/* ══════════════════════ 채점 ══════════════════════ */
+function grade(c,k){
+  const rows = c.items.map(it=>Object.assign({id:it.id,kind:it.kind,q:it.q}, it.run(k)));
+  const by = kd=>{ const s=rows.filter(r=>r.kind===kd); return [s.filter(r=>r.ok).length, s.length]; };
+  return { rows, calc:by("calc"), meaning:by("meaning"), explain:by("explain"),
+           total:[rows.filter(r=>r.ok).length, rows.length],
+           pass:new Set(rows.filter(r=>r.ok).map(r=>r.id)) };
+}
+
+/* ══════════════════════ 렌더 ══════════════════════ */
+function renderPicker(){
+  $("#picker").innerHTML = CONCEPTS.map(c=>{
+    const st = ST[c.id], g = st.last;
+    const n = g? g.total[0] : 0;
+    return `<button class="cbtn" data-c="${c.id}" aria-current="${c.id===CID}">
+      <span class="cn">${c.nm}</span><span class="cg">${c.grade}</span>
+      <span class="cp"><span class="bar"><i style="width:${n*10}%;background:${n===10?"var(--good)":"var(--s1)"}"></i></span>
+      <span>${n}/10</span></span></button>`;
+  }).join("");
+}
+function renderSlots(just){
+  const c=C(), K=S().K, PT=S().partial||{};
+  $("#slots").innerHTML = c.slots.map(s=>{
+    let on=false, part=false, body="";
+    if(s.subs){
+      on = K[s.key].size>0;
+      const halves = s.subs.filter(([sk])=> !K[s.key].has(sk) && PT[s.key+":"+sk]);
+      part = halves.length>0;
+      if(on || part){
+        body = `<div class="chips">${s.subs.map(([sk,lb])=>{
+          const full=K[s.key].has(sk), half=!full && !!PT[s.key+":"+sk];
+          return `<span class="chip ${full?"":(half?"half":"off")}">${lb}</span>`;}).join("")}</div>`;
+        if(halves.length) body += `<div class="half">절반쯤 알아들었어요 — ${esc(PT[s.key+":"+halves[0][0]])}</div>`;
+      } else body = `<div class="hint">${s.hint}</div>`;
+    } else {
+      on = !!K[s.key]; part = !on && !!PT[s.key];
+      body = on ? `<div class="got">✓ ${tw("배웠어요","알려줬어요")}</div>`
+           : part ? `<div class="half">절반쯤 알아들었어요 — ${esc(PT[s.key])}</div>`
+           : `<div class="hint">${s.hint}</div>`;
+    }
+    return `<div class="slot ${on?"on":(part?"part":"")}${just&&just.includes(s.key)?" just":""}">
+      <div class="top"><span class="dot"></span><span class="nm">${s.nm}</span></div>${body}</div>`;
+  }).join("");
+}
+function renderCov(g){
+  const mk=(k,a,c)=>`<div class="covrow"><span class="k">${k}</span>
+    <span class="bar"><i style="width:${Math.round(a[0]/a[1]*100)}%;background:${c}"></i></span>
+    <span class="v">${a[0]}/${a[1]}</span></div>`;
+  $("#cov").innerHTML = g ? mk(kindNm("calc"),g.calc,"var(--s1)")+mk(kindNm("meaning"),g.meaning,"var(--s2)")+mk(kindNm("explain"),g.explain,"var(--s3)")
+                          : mk(kindNm("calc"),[0,5],"var(--s1)")+mk(kindNm("meaning"),[0,3],"var(--s2)")+mk(kindNm("explain"),[0,2],"var(--s3)");
+  $("#covnote").innerHTML = g
+    ? tw(`총 <b>${g.total[0]}/${g.total[1]}</b> 통과 · 버전 v${S().exams}`,
+         `${g.total[1]}문제 중 <b>${g.total[0]}개</b>를 풀었어요 · ${ord(S().exams)} 수업`)
+    : tw("아직 시험을 보지 않았습니다.","아직 시험을 안 봤어요.");
+}
+function renderTape(){
+  $("#tape").innerHTML = S().tape.map(t=>{
+    const chips = [];
+    (t.added||[]).forEach(a=>chips.push(`<span class="chip">+ ${a}</span>`));
+    (t.half||[]).forEach(a=>chips.push(`<span class="chip half">◐ ${a}</span>`));
+    if(!chips.length) chips.push(`<span class="chip off">알아듣지 못함</span>`);
+    return `<div style="border:1px solid var(--border);border-radius:11px;padding:10px 13px;background:var(--surface-2)">
+      <div style="font-size:11.5px;font-weight:700;color:var(--ink-3);margin-bottom:3px">나${
+        t.mode==="ai"?' <span style="color:var(--s1)">· AI 귀</span>':""}</div>
+      <div style="font-size:14px;line-height:1.65">${esc(t.text)}</div>
+      <div class="chips">${chips.join("")}</div>
+      ${t.memo?`<div class="memo" style="margin-top:7px"><b>추출기 메모</b> — ${esc(t.memo)}</div>`:""}</div>`;
+  }).join("");
+  $("#tape").scrollTop = $("#tape").scrollHeight;
+}
+function renderHeadline(g,fixed,broke){
+  const el=$("#headline"), pc=a=>Math.round(a[0]/a[1]*100);
+  const conceptPass = g.meaning[0]+g.explain[0], conceptAll = g.meaning[1]+g.explain[1];
+  let cls="",big="",p="";
+  if(broke.length){
+    cls="alert";
+    big = tw(`전에 맞던 ${broke.join(", ")}번이 <span style="color:var(--crit-ink)">깨졌습니다.</span>`,
+             `어? <b>아까는 풀던 문제</b>를 못 풀어요.`);
+    p = tw(C().regressNote || `불완전한 개념은 아무것도 모르는 것보다 나쁠 수 있습니다. 제자는 이제 <b>절차를 알면서도 거부</b>합니다.`,
+           `방금 알려준 게 <b>틀린 건 아니에요.</b> 다만 <b>반쪽짜리</b>라서 제자가 헷갈린 거예요. 제자에게 뭘 더 말해 줘야 할까요?`);
+  } else if(g.total[0]===g.total[1]){
+    cls="win";
+    big = tw(`10문항 전부 통과 — 이해 커버리지 100%`, `10문제 전부 성공! 🎉`);
+    p = tw(`${kindNm("calc")}·${kindNm("meaning")}·${kindNm("explain")}이(가) 모두 채워졌습니다. ‘이해 이력’ 탭에서 여기까지 온 경로를 확인해 보세요.`,
+           `제자가 이제 <b>풀고, 알고, 설명까지</b> 할 수 있어요. 네 설명에 구멍이 없다는 뜻이에요.`);
+  } else if(pc(g.calc)===100 && conceptPass/conceptAll < 0.35){
+    cls="alert";
+    big = tw(`${kindNm("calc")} <span style="color:var(--s1-ink)">100%</span> · ${kindNm("meaning")} <span style="color:var(--s2-ink)">${pc(g.meaning)}%</span> · ${kindNm("explain")} <span style="color:var(--s3-ink)">${pc(g.explain)}%</span>`,
+             `문제는 다 맞았는데, <span style="color:var(--s2-ink)">왜 그런지는 하나도 몰라요</span>`);
+    p = tw(`이 프로젝트가 보여주려는 바로 그 장면입니다. 제자는 <b>${kindNm("calc")} 다섯 문제를 다 맞히면서 ${C().nm}이 무슨 뜻인지 거의 모릅니다.</b> 시험지가 계산만 물었다면 이 아이는 만점입니다.`,
+           `제자가 <b>다섯 문제를 다 풀었어요.</b> 그런데 “왜 그렇게 되는지” 물으면 하나도 대답을 못 해요. 무엇을 더 알려줘야 할까요?`);
+  } else if(fixed.length){
+    big = tw(`${fixed.join(", ")}번이 새로 통과했습니다.`, `${fixed.length}문제를 <b>새로 풀 수 있게</b> 됐어요!`);
+    p = tw(`제자의 실패는 제자의 문제가 아니라 <b>설명에 뚫린 구멍</b>입니다. 아래에서 제자가 뭐라고 했는지 읽어 보세요.`,
+           `아래에서 제자가 뭐라고 했는지 읽어 보세요. 못 푼 문제에는 <b>아직 안 알려준 것</b>이 숨어 있어요.`);
+  } else {
+    big = tw(`아직 통과하지 못한 문항이 ${g.total[1]-g.total[0]}개 있습니다.`, `아직 못 푼 문제가 ${g.total[1]-g.total[0]}개 있어요.`);
+    p = tw(`제자가 각 문항에서 <b>정확히 무엇에 걸렸는지</b> 말합니다. 그게 다음에 가르칠 것입니다.`,
+           `제자가 문제마다 <b>어디서 막혔는지</b> 말해 줘요. 그게 다음에 알려줄 것이에요.`);
+  }
+  el.className="headline "+cls; el.innerHTML=`<div class="big">${big}</div><p>${p}</p>`;
+}
+
+/* ══════════════════════ 시험 ══════════════════════ */
+function runExam(){
+  const c=C(), st=S(), g=grade(c,st.K);
+  st.exams++;
+  const prev = st.last ? st.last.pass : null;
+  const fixed = prev ? [...g.pass].filter(id=>!prev.has(id)) : [...g.pass];
+  const broke = prev ? [...prev].filter(id=>!g.pass.has(id)) : [];
+  st.history.push({v:st.exams, g, fixed, broke, taught:st.pending.slice()});
+  st.pending=[]; st.last=g;
+
+  $("#examWrap").classList.remove("hide");
+  $("#vlabel").textContent = tw(`v${st.exams} · ${c.nm}`, `${ord(st.exams)} 수업 · ${c.nm}`);
+  $("#examNote").innerHTML = tw(
+    `${kindNm("calc")} 5문항 · ${kindNm("meaning")} 3문항 · ${kindNm("explain")} 2문항. 제자는 자기가 배운 규칙으로만 답합니다.`,
+    `${kindNm("calc")} 5문제 · ${kindNm("meaning")} 3문제 · ${kindNm("explain")} 2문제. 제자는 <b>내가 알려준 것만</b> 써서 풀어요.`);
+  $("#qgrid").innerHTML = g.rows.map(r=>`
+    <div class="q ${r.ok?"pass":"fail"}">
+      <div class="qh"><span class="kind ${r.kind}">${kindNm(r.kind)}</span>
+      <span class="mark">${r.ok?tw("통과","맞았어요"):tw("실패","못 풀었어요")}</span></div>
+      <div class="qq">${r.q}</div><div class="said">${r.said}</div></div>`).join("");
+  $$("#qgrid .q").forEach((el,i)=>setTimeout(()=>el.classList.add("in"), 60+i*70));
+
+  const reveal = obActive() && OB===2;
+  if(reveal) setOB(3, true);
+  renderCov(g); renderHeadline(g,fixed,broke); renderHistory(); renderPicker();
+  const pre = reveal ? `<b>여기까지가 시작이에요.</b> 이제 오른쪽에 <b>제자가 배운 것</b>과
+      <b>풀 수 있는 문제</b>가 보여요.<br>` : "";
+  if(g.total[0]===g.total[1]) setPupil("proud", pre+tw(`선생님, <b>전부 다 풀었어요!</b> 이제 왜 그런지도 설명할 수 있어요.`,
+                                                       `선생님, <b>전부 다 풀었어요!</b> 왜 그런지도 말할 수 있어요.`));
+  else if(broke.length)       setPupil("confused", pre+tw(`어… 선생님. 새로 배운 걸 적용했더니 <b>전에는 풀던 ${broke.join(", ")}번을 못 풀겠어요.</b> ${c.regress}`,
+                                                          `어… 선생님. 방금 배운 대로 했더니 <b>아까는 풀었던 문제를 못 풀겠어요.</b> ${c.regress}`));
+  else                        setPupil(fixed.length?"happy":"think", pre + c.ask(S().K));
+  setTimeout(()=>$("#examWrap").scrollIntoView({block:"start"}),260);
+}
+
+/* ══════════════════════ 가르치기 ══════════════════════ */
+$("#tin").addEventListener("input",e=>{
+  const n=e.target.value.trim().length;
+  $("#tcount").textContent=n+"자"; $("#teachBtn").disabled = n<4;
+});
+/* ═════════════ 지식 항목 서술 (LLM 추출기에 넘길 설명) ═════════════ */
+const SLOTDESC = {
+ fracdiv:{
+  "meaning:partition":"나눗셈을 '똑같이 나눠 준다(등분)'로 보는 관점. 예: 피자 반 판을 세 명이 나눠 먹기",
+  "meaning:measurement":"나눗셈을 '어떤 수 안에 다른 수가 몇 번 들어가는가(포함)'로 보는 관점",
+  reciprocal:"역수란 분자와 분모를 서로 바꾼 수라는 것. '뒤집는다'가 무엇을 어떻게 하는 것인지",
+  procedure:"분수 나눗셈은 나눗셈을 곱셈으로 바꾸고 나누는 수를 역수로 만들어 계산한다는 절차",
+  whole:"자연수도 분모가 1인 분수로 볼 수 있어 역수를 만들 수 있다는 것 (예: 3 = 3/1)",
+  magnitude:"1보다 작은 수로 나누면 결과가 원래 수보다 커진다는 크기 감각",
+  justification:"역수를 곱하는 이유 — 나누는 수를 1로 만들기 위해서이며, 분자와 분모에 같은 수를 곱해도 값이 변하지 않기 때문"},
+ negmul:{
+  "story:debt":"음수를 빚·손해·영하 온도 같은 실생활 상황에 대응시키는 모형",
+  "story:reverse":"음수를 곱하는 것을 '방향을 반대로 뒤집는 것'으로 보는 모형. 반대의 반대는 원래 방향",
+  sign:"곱셈 결과의 부호 규칙 — 같은 부호끼리는 양수, 다른 부호끼리는 음수 (또는 음수의 개수가 짝수면 양수, 홀수면 음수)",
+  abs:"부호를 뺀 수의 크기(절댓값)끼리 곱해서 답의 크기를 정한다는 것",
+  power:"괄호 유무에 따라 (−2)² 과 −2² 이 다르다는 것. 괄호가 없으면 제곱은 밑의 수에만 붙는다",
+  pattern:"부호 규칙을 수의 규칙·패턴으로 보이는 방법 — 곱하는 수를 1씩 줄이면 결과가 일정하게 변한다는 흐름",
+  proof:"분배법칙과 0을 이용해 (−1)×(−1)=+1 을 논리적으로 유도하는 정당화"},
+ mean:{
+  "meaning:leveling":"평균은 많은 데서 덜어 적은 데를 채워 모두 같아지게 만든 값이라는 관점",
+  "meaning:representative":"평균은 자료를 대표하는 값일 뿐 실제로 존재하는 값은 아니라는 관점",
+  procedure:"평균 = 자료를 모두 더한 값 ÷ 자료의 개수",
+  countAll:"0이나 낮은 값도 하나의 자료로 개수에 포함해야 한다는 것",
+  inverse:"평균 × 자료 수 = 전체 합. 평균에서 거꾸로 총합을 구할 수 있다는 것",
+  weight:"자료 수가 다른 두 집단은 평균끼리 그냥 평균 낼 수 없고, 각 총합을 더해 전체 개수로 나눠야 한다는 것",
+  limit:"평균이 같아도 자료가 흩어진 정도는 다를 수 있어 평균만으로 판단할 수 없다는 것"},
+ force:{
+  "pairs:same":"작용과 반작용은 크기가 같고 방향이 반대라는 것",
+  "pairs:twoBodies":"작용·반작용의 두 힘은 서로 다른 물체에 작용하므로 서로 상쇄되지 않는다는 것",
+  formula:"힘 = 질량 × 가속도 (F=ma). 또는 가속도가 힘에 비례하고 질량에 반비례한다는 관계",
+  unit:"힘은 N(뉴턴), 질량은 kg, 가속도는 m/s² 단위를 쓴다는 것",
+  inertia:"관성 — 알짜힘이 0이면 물체는 정지해 있거나 등속으로 계속 움직인다. 힘은 속도가 아니라 속도의 '변화'를 만든다",
+  friction:"현실에서 물체가 멈추는 이유는 마찰력·공기 저항 때문이라는 것",
+  gravityFall:"낙하 속도는 무게와 무관하며 무거운 물체가 더 빨리 떨어지지 않는다는 것"},
+ claim:{
+  "overgen:beware":"몇 개의 사례로 전체를 단정하면 안 된다(성급한 일반화)는 것",
+  "overgen:sample":"표본이 충분히 크고 대표성이 있으면 조사 결과는 믿을 만한 근거가 된다는 것",
+  distinguish:"글에서 주장(글쓴이가 내세우는 생각)과 근거(그 이유)를 구분하는 방법",
+  factOpinion:"사실은 확인·측정할 수 있는 내용, 의견은 사람의 생각·느낌이라는 구분",
+  relevance:"근거는 주장과 관련이 있어야 한다는 것",
+  source:"근거의 출처가 분명하고 믿을 만한지 따져야 한다는 것",
+  counter:"반대 입장을 살펴야 주장이 더 설득력 있어진다는 것"}
+};
+
+/* ═════════════ 사용량 계량기 ═════════════ */
+const USE = { calls:0, tin:0, tout:0 };
+function paintUsage(){
+  const compact = $("#usage");
+  if(compact) compact.innerHTML = (!LLM.on || !USE.calls) ? ""
+    : ` · AI 호출 <b>${USE.calls}</b>회 · 요금 0원`;
+  const box = $("#usageBox"); if(!box) return;
+  box.innerHTML = USE.calls ? `
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:10px">
+      <div><div class="lb2">AI 호출</div><b>${USE.calls}회</b></div>
+      <div><div class="lb2">입력 토큰</div><b>${USE.tin.toLocaleString()}</b></div>
+      <div><div class="lb2">출력 토큰</div><b>${USE.tout.toLocaleString()}</b></div>
+      <div><div class="lb2">요금</div><b>0원</b></div>
+    </div>
+    <div class="muted" style="margin-top:8px">
+      무료 등급에서 걸리는 건 돈이 아니라 <b>하루 호출 횟수</b>입니다.
+      학생 1명이 개념 하나를 끝까지 배우는 데 <b>6~9회</b>가 드니 30명 한 학급이면 <b>약 210회</b>.
+      로컬 모델은 한도 자체가 없습니다.
+    </div>` : `<span class="muted">아직 AI 호출이 없습니다. 가르치기를 한 번 하면 여기 표시됩니다.</span>`;
+}
+
+/* ═════════════ LLM 연결 (귀에만) ═════════════ */
+const LLM = { on:false, model:"gemini-3.6-flash",
+              base:"https://generativelanguage.googleapis.com/v1beta/openai", key:"" };
+
+function targetsOf(c){
+  const out=[];
+  c.slots.forEach(s=>{
+    if(s.subs) s.subs.forEach(([sk,lb])=> out.push({key:`${s.key}:${sk}`, nm:`${s.nm} · ${lb}`}));
+    else out.push({key:s.key, nm:s.nm});
+  });
+  return out.map(t=>Object.assign(t,{d:(SLOTDESC[c.id]||{})[t.key]||""}));
+}
+function targetName(c,key){
+  if(key.includes(":")){ const [k,sub]=key.split(":"); const s=c.slots.find(x=>x.key===k);
+    if(!s||!s.subs) return key;
+    const lb=(s.subs.find(x=>x[0]===sub)||[,sub])[1];
+    return `${s.nm} · ${lb.split("·").pop().trim()}`; }
+  const s=c.slots.find(x=>x.key===key); return s?s.nm:key;
+}
+function ruleHits(c,t){ return c.detect.filter(d=>d.re.test(t)).map(d=>d.slot); }
+
+async function callLLM(system, user){
+  const r = await fetch(LLM.base.replace(/\/+$/,"")+"/chat/completions",{ method:"POST",
+    headers:{"content-type":"application/json","authorization":"Bearer "+(LLM.key||"local")},
+    body:JSON.stringify({model:LLM.model,max_tokens:1400,
+      messages:[{role:"system",content:system},{role:"user",content:user}]}) });
+  if(!r.ok) throw new Error(`${r.status} · ${(await r.text()).slice(0,180)}`);
+  const j = await r.json();
+  const txt = j.choices?.[0]?.message?.content || "";
+  USE.calls++; USE.tin += j.usage?.prompt_tokens||0; USE.tout += j.usage?.completion_tokens||0;
+  paintUsage();
+  const i=txt.indexOf("{"), k=txt.lastIndexOf("}");
+  if(i<0||k<i) throw new Error("JSON 응답을 찾지 못했습니다.");
+  return JSON.parse(txt.slice(i,k+1));
+}
+
+const EXTRACTOR_SYSTEM = `당신은 교육 프로토타입의 '이해 추출기'입니다.
+학생이 AI 제자에게 한 설명을 읽고, 주어진 지식 항목 각각이 그 설명에 담겼는지 판정합니다.
+
+판정 원칙
+- 표현이 교과서와 달라도 **뜻이 통하면 full** 로 판정합니다. 전문 용어를 쓰지 않아도 됩니다.
+- 구체적인 예시만 들었더라도 그 예시가 원리를 담고 있으면 full 입니다.
+- 방향은 맞지만 핵심 조건이 빠졌으면 partial 이고, 무엇이 빠졌는지 한국어 한 문장으로 적습니다.
+- 언급이 전혀 없으면 none 입니다. 추측해서 채우지 마세요.
+- 설명이 교과 내용과 어긋나면 none 으로 하고 memo 에 짧게 적습니다.
+- 학생을 평가하지 말고, 오직 '이 말에 이 내용이 들어 있는가'만 판정합니다.
+- 반드시 JSON 하나만 출력합니다. 다른 말은 쓰지 마세요.`;
+
+async function llmExtract(c, t){
+  const tg = targetsOf(c);
+  const user = `개념: ${c.nm} (${c.grade})
+
+지식 항목:
+${tg.map((x,i)=>`${i+1}) key="${x.key}" | 이름=${x.nm} | 담아야 할 내용=${x.d}`).join("\n")}
+
+학생의 설명:
+"""${t}"""
+
+출력 형식(JSON):
+{"slots":[{"key":"위 key 중 하나","level":"full|partial|none","quote":"학생 말에서 근거가 된 부분","missing":"partial일 때만, 무엇이 빠졌는지 한 문장"}],"memo":"교과 내용과 어긋나는 점이 있으면 한 문장, 없으면 빈 문자열"}`;
+  const res = await callLLM(EXTRACTOR_SYSTEM, user);
+  const valid = new Set(tg.map(x=>x.key));
+  const slots = (res.slots||[]).filter(x=>valid.has(x.key) && x.level!=="none");
+  return { slots, memo:(res.memo||"").trim() };
+}
+
+/* ═════════════ 가르치기 ═════════════ */
+function applyTeaching(t, judged, memo, rules, mode){
+  const c=C(), st=S();
+  const addedKeys=[], addedNames=[], halfNames=[];
+  judged.forEach(j=>{
+    const isFull = j.level==="full";
+    if(j.key.includes(":")){
+      const [key,sub]=j.key.split(":");
+      if(isFull){ if(!st.K[key].has(sub)){ st.K[key].add(sub); addedKeys.push(key);
+                    addedNames.push(targetName(c,j.key)); }
+                  delete st.partial[j.key]; }
+      else if(!st.K[key].has(sub)){ st.partial[j.key]= j.missing||"핵심 조건이 빠졌어요";
+                    halfNames.push(targetName(c,j.key)); }
+    } else {
+      if(isFull){ if(!st.K[j.key]){ st.K[j.key]=true; addedKeys.push(j.key);
+                    addedNames.push(targetName(c,j.key)); }
+                  delete st.partial[j.key]; }
+      else if(!st.K[j.key]){ st.partial[j.key]= j.missing||"핵심 조건이 빠졌어요";
+                    halfNames.push(targetName(c,j.key)); }
+    }
+  });
+  st.pending.push(...addedNames);
+  st.tape.push({text:t, added:addedNames, half:halfNames, memo, mode});
+  $("#confirmWrap").innerHTML="";
+  $("#tin").value=""; $("#tcount").textContent="0자"; $("#teachBtn").disabled=true;
+  renderSlots([...new Set(addedKeys)]); renderTape();
+
+  if(obActive() && OB===1 && addedNames.length){
+    setOB(2);
+    setPupil("think", `<b>${addedNames.join(", ")}</b>을(를) 알았어요!
+      이제 <b>‘시험 보내기’</b>를 눌러 주세요. 방금 알려준 것만으로 문제를 풀어 볼게요.`);
+  }
+  else if(addedNames.length)
+    setPupil("think", `알겠어요! <b>${addedNames.join(", ")}</b>을(를) 배웠어요.` +
+      (halfNames.length? ` 그런데 <b>${halfNames[0]}</b>은(는) 아직 반쯤만 알아들었어요 — ${esc(st.partial[Object.keys(st.partial)[0]]||"")}` : "") +
+      ` 이제 시험 보내 주시면 이걸로 풀어 볼게요.`);
+  else if(halfNames.length)
+    setPupil("confused", `무슨 말인지 알 것 같기는 한데… <b>${halfNames[0]}</b>은(는) 아직 못 쓰겠어요.
+      ${esc(Object.values(st.partial)[0]||"")} 조금만 더 알려 주실래요?`);
+  else
+    setPupil("confused", `죄송해요 선생님… <b>무슨 말인지 잘 모르겠어요.</b>
+      제가 <b>따라 할 수 있는 규칙</b>처럼 말해 주실래요?`);
+}
+
+function showConfirm(t, res, rules){
+  const c=C();
+  const rows = res.slots.map(j=>`
+    <div class="judge ${j.level}">
+      <div class="jt"><span>${targetName(c,j.key)}</span>
+        <span class="lv">${j.level==="full"?"알아들음":"절반"}</span></div>
+      ${j.quote?`<div class="qt">“${esc(String(j.quote).slice(0,90))}”</div>`:""}
+      ${j.level==="partial"&&j.missing?`<div class="ms">빠진 것 — ${esc(j.missing)}</div>`:""}
+    </div>`).join("");
+  const ruleNames = rules.map(k=>targetName(c,k));
+  const aiFull = res.slots.filter(j=>j.level==="full").map(j=>targetName(c,j.key));
+  $("#confirmWrap").innerHTML = `
+    <div class="confirm">
+      <h4>제가 이렇게 알아들었어요</h4>
+      <p class="muted" style="margin:0 0 2px">맞으면 이대로 배울게요. 아니면 다시 말해 주세요.</p>
+      ${rows || `<div class="judge"><div class="jt">아무것도 못 알아들었어요</div></div>`}
+      ${res.memo? `<div class="memo"><b>추출기 메모</b> — ${esc(res.memo)}
+         <br><span class="muted">이 메모는 제자가 아니라 채점 쪽에서 나온 것입니다. 제자는 여전히 아무것도 모릅니다.</span></div>`:""}
+      <div class="vs">
+        <span>같은 문장을 <b>규칙 엔진</b>이 들었다면: <b>${ruleNames.length? ruleNames.join(", ") : "못 알아들음"}</b></span>
+        <span>·</span>
+        <span><b>AI 귀</b>: <b>${aiFull.length? aiFull.join(", ") : "완전히 알아들은 것 없음"}</b></span>
+      </div>
+      <div class="row" style="justify-content:flex-end;margin-top:12px">
+        <button class="btn ghost" id="cfNo">아니에요, 다시 말할게요</button>
+        <button class="btn" id="cfYes">맞아요, 이대로 배울게요</button>
+      </div>
+    </div>`;
+  $("#cfYes").onclick = ()=> applyTeaching(t, res.slots, res.memo, rules, "ai");
+  $("#cfNo").onclick  = ()=>{ $("#confirmWrap").innerHTML=""; $("#tin").value=t;
+      $("#tcount").textContent=t.length+"자"; $("#teachBtn").disabled=false; $("#tin").focus();
+      setPupil("confused", `아, 제가 잘못 알아들었군요. <b>다시 말해 주세요</b> — 어디가 달랐는지 짚어 주시면 좋아요.`); };
+}
+
+$("#teachBtn").onclick = async ()=>{
+  const c=C(), t=$("#tin").value.trim();
+  if(t.length<4) return;
+  const rules = ruleHits(c,t);
+  if(!LLM.on){ applyTeaching(t, rules.map(k=>({key:k,level:"full"})), "", rules, "rule"); return; }
+  $("#teachBtn").disabled=true; $("#examBtn").disabled=true;
+  setPupil("think", `<span class="spin"></span>선생님 말씀을 <b>읽고 있어요…</b>`);
+  try{
+    const res = await llmExtract(c,t);
+    showConfirm(t, res, rules);
+    setPupil("think", `제가 이해한 게 맞는지 <b>아래에서 확인해 주세요.</b>`);
+  }catch(e){
+    setPupil("confused", `AI 연결에 문제가 있어요.<br><span class="muted">${esc(e.message)}</span><br>일단 규칙 방식으로 알아들어 볼게요.`);
+    applyTeaching(t, rules.map(k=>({key:k,level:"full"})), "", rules, "rule");
+  }finally{ $("#examBtn").disabled=false; $("#teachBtn").disabled = $("#tin").value.trim().length<4; }
+};
+
+/* ═════════════ 제공자 프리셋 (무료·로컬만) ═════════════ */
+const PRESETS = {
+  gemini:{ label:"Google Gemini — 무료 등급", model:"gemini-3.6-flash",
+    base:"https://generativelanguage.googleapis.com/v1beta/openai",
+    note:"AI Studio(aistudio.google.com)에서 <b>카드 없이</b> 키를 만들 수 있습니다. 하루 호출 한도가 있고 계정·모델마다 다르니 AI Studio에서 확인하세요. <b>무료 등급은 데이터 사용 정책이 유료와 다를 수 있으니</b> 학생 문장을 넣기 전에 약관을 읽어 주세요." },
+  ollama:{ label:"로컬 · Ollama — 권장", model:"qwen2.5:7b",
+    base:"http://localhost:11434/v1", local:true,
+    note:"내 컴퓨터에서 돌므로 <b>요금 0원, 한도 없음, 학생 문장이 기기 밖으로 나가지 않습니다.</b> 브라우저에서 부르려면 <code>OLLAMA_ORIGINS=* ollama serve</code> 로 띄우세요. 키는 비워 둡니다." },
+  lmstudio:{ label:"로컬 · LM Studio — 권장", model:"(LM Studio에 로드한 모델명)",
+    base:"http://localhost:1234/v1", local:true,
+    note:"LM Studio에서 로컬 서버를 켜고 <b>CORS 허용</b>을 체크하세요. 요금 0원, 한도 없음, 문장이 기기 밖으로 나가지 않습니다. 키는 비워 둡니다." },
+  custom:{ label:"기타 · OpenAI 호환 주소 직접 입력", model:"",
+    base:"", note:"무료 등급을 제공하는 다른 OpenAI 호환 서비스나 직접 띄운 서버를 붙일 때 씁니다. 주소와 모델명을 직접 넣으세요." }
+};
+function applyPreset(id){
+  const p = PRESETS[id]; if(!p) return;
+  $("#model").value = p.model;
+  $("#base").value  = p.base;
+  $("#provNote").innerHTML = p.note;
+  $("#key").placeholder = p.local ? "로컬 서버는 비워 두세요" : "무료 등급 키를 붙여 넣으세요";
+  paintUsage();
+}
+
+/* ═════════════ 설정 UI ═════════════ */
+function paintMode(){
+  const b=$("#modeBadge");
+  b.className = "badge" + (LLM.on?" on":"");
+  b.innerHTML = `<i></i>${LLM.on? "AI 귀 · "+esc(LLM.model) : "규칙 모드"}`;
+  $("#aiBtn").textContent = LLM.on? "AI 설정" : "AI 연결";
+}
+$("#aiBtn").onclick = ()=>{ $("#setup").classList.toggle("hide");
+  if(!$("#setup").classList.contains("hide")) $("#setup").scrollIntoView({block:"center"}); };
+$("#prov").onchange = ()=> applyPreset($("#prov").value);
+function setTest(kind, html){
+  const el=$("#testOut"); el.className = kind==="busy" ? "" : kind;
+  el.classList.remove("hide"); el.innerHTML = html;
+}
+function diagnose(status, body){
+  const b = esc(String(body).slice(0,140));
+  const M = {
+    400:"요청 형식 문제입니다. 이 엔드포인트가 <b>그 모델명을 모를</b> 가능성이 큽니다.",
+    401:"<b>키가 잘못됐거나 만료</b>됐습니다. 다시 발급받아 붙여 넣어 보세요.",
+    403:"키에 <b>권한이 없습니다.</b> 해당 모델 사용이 허용된 키인지 확인하세요.",
+    404:"<b>Base URL이나 모델명</b>이 틀렸을 가능성이 큽니다. 주소 끝의 <code>/v1</code> 유무도 확인하세요.",
+    429:"<b>무료 등급 한도</b>를 넘었습니다. 잠시 뒤 다시 시도하거나 로컬 모델로 바꿔 보세요.",
+    500:"서버 쪽 오류입니다. 잠시 뒤 다시 시도해 보세요."
+  };
+  return `<b>연결 실패 — HTTP ${status}</b><span class="why">${M[status]||"알 수 없는 오류입니다."}<br>서버 응답: ${b}</span>`;
+}
+$("#aiTest").onclick = async ()=>{
+  const pre = PRESETS[$("#prov").value] || PRESETS.gemini;
+  const base=$("#base").value.trim(), model=$("#model").value.trim(), key=$("#key").value.trim();
+  if(!base || !model) return setTest("bad","<b>Base URL과 모델명</b>을 먼저 채워 주세요.");
+  if(!key && !pre.local) return setTest("bad","<b>무료 등급 키</b>가 필요합니다. (로컬 서버는 키 없이 됩니다)");
+  setTest("busy",`<span class="spin"></span>연결을 확인하는 중…`);
+  const t0 = performance.now();
+  try{
+    const r = await fetch(base.replace(/\/+$/,"")+"/chat/completions",{ method:"POST",
+      headers:{"content-type":"application/json","authorization":"Bearer "+(key||"local")},
+      body:JSON.stringify({model, max_tokens:16, messages:[{role:"user",content:"연결 확인입니다. OK 라고만 답하세요."}]}) });
+    const txt = await r.text();
+    if(!r.ok) return setTest("bad", diagnose(r.status, txt));
+    let j={}; try{ j=JSON.parse(txt); }catch(e){ return setTest("bad","<b>응답을 해석하지 못했습니다.</b><span class=\"why\">OpenAI 호환 형식이 아닐 수 있습니다.</span>"); }
+    const ms = Math.round(performance.now()-t0);
+    const said = String(j.choices?.[0]?.message?.content||"").trim().slice(0,24);
+    const u = j.usage || {};
+    setTest("ok", `<b>연결 성공</b> — ${esc(model)} · ${ms}ms
+      <span class="why">응답: “${esc(said||"(빈 응답)")}” · 입력 ${u.prompt_tokens??"?"} / 출력 ${u.completion_tokens??"?"} 토큰
+      <br>이제 <b>연결하기</b>를 누르면 ‘AI 귀’가 켜집니다.</span>`);
+  }catch(e){
+    setTest("bad", `<b>요청 자체가 막혔습니다</b> — ${esc(e.message)}
+      <span class="why">브라우저가 요청을 보내지 못한 경우입니다. 대개 <b>CORS</b> 문제입니다 —
+      Ollama는 <code>OLLAMA_ORIGINS=*</code> 로 띄우고, LM Studio는 서버 설정에서 <b>CORS 허용</b>을 켜세요.
+      주소 오타나 서버 미실행도 같은 증상을 냅니다.</span>`);
+  }
+};
+$("#aiSave").onclick = ()=>{
+  const pre = PRESETS[$("#prov").value] || PRESETS.gemini;
+  const k=$("#key").value.trim();
+  if(!k && !pre.local){ alert("무료 등급 키를 입력해 주세요. (로컬 서버를 고르면 키 없이 쓸 수 있습니다)"); return; }
+  LLM.model=$("#model").value.trim();
+  LLM.base=$("#base").value.trim(); LLM.key=k||"local"; LLM.on=true;
+  paintMode(); paintUsage(); $("#setup").classList.add("hide");
+  setPupil("think", `이제 선생님 말씀을 <b>더 잘 알아들을 수 있어요.</b>
+    교과서처럼 말하지 않아도 괜찮아요 — 뜻만 통하면 알아들을게요. 대신 <b>문제는 여전히 배운 규칙으로만</b> 풉니다.`);
+};
+$("#aiOff").onclick = ()=>{ LLM.on=false; LLM.key=""; $("#key").value=""; $("#testOut").classList.add("hide");
+  paintMode(); paintUsage(); $("#setup").classList.add("hide"); };
+applyPreset("gemini"); paintMode();
+
+
+$("#examBtn").onclick = runExam;
+
+/* ══════════════════════ 이력 ══════════════════════ */
+function renderHistory(){
+  $("#histSummary").innerHTML = CONCEPTS.map(c=>{
+    const st=ST[c.id], g=st.last, pc=a=>a?Math.round(a[0]/a[1]*100):0;
+    const reg = st.history.some(h=>h.broke.length);
+    return `<div class="mini"><span class="tag ${c.id===CID?"a":"d"}">${c.grade}</span>
+      <h4>${c.nm}</h4>
+      <p>${g? `버전 v${st.exams} · <b>${g.total[0]}/10 통과</b><br>
+        계산 ${pc(g.calc)}% · 의미 ${pc(g.meaning)}% · 설명 ${pc(g.explain)}%
+        ${reg? `<br><span style="color:var(--crit);font-weight:600">회귀 경험 있음</span>`:""}`
+        : "아직 시험을 보지 않았습니다."}</p></div>`;
+  }).join("");
+  $("#histTitle").textContent = C().nm + " — 커밋 로그";
+  const st=S();
+  if(!st.history.length){ $("#hist").innerHTML=`<p class="muted" style="margin-top:14px">아직 기록이 없습니다.</p>`; return; }
+  $("#hist").innerHTML = st.history.map(h=>{
+    const pc=a=>Math.round(a[0]/a[1]*100);
+    const mini=(a,c,nm)=>`<div><div class="lb">${nm} ${a[0]}/${a[1]}</div>
+      <span class="bar"><i style="width:${pc(a)}%;background:${c}"></i></span></div>`;
+    const L=[];
+    h.taught.forEach(t=>L.push(`<div class="add">+ 가르침 &nbsp;${t}</div>`));
+    if(h.fixed.length) L.push(`<div class="fix">✓ 새로 통과 &nbsp;${h.fixed.join(", ")}</div>`);
+    if(h.broke.length) L.push(`<div class="brk">✗ 깨짐 &nbsp;${h.broke.join(", ")} &nbsp;— 회귀 발생</div>`);
+    if(!L.length) L.push(`<div class="muted" style="padding:4px 10px">변화 없음</div>`);
+    return `<div class="ver"><div class="vh"><span class="vtag">v${h.v}</span>
+      <span style="font-weight:640">${h.g.total[0]}/${h.g.total[1]} 통과</span>
+      <span class="muted">이해 커버리지 ${pc(h.g.total)}%</span></div>
+      <div class="diff">${L.join("")}</div>
+      <div class="minicov">${mini(h.g.calc,"var(--s1)","계산")}${mini(h.g.meaning,"var(--s2)","의미")}${mini(h.g.explain,"var(--s3)","설명")}</div></div>`;
+  }).reverse().join("");
+}
+
+/* ══════════════════════ 연구용 로그 내보내기 ══════════════════════ */
+function slotSnapshot(c, K){
+  const o={};
+  c.slots.forEach(sl=> o[sl.key] = sl.subs ? [...K[sl.key]] : !!K[sl.key]);
+  return o;
+}
+function buildLog(){
+  return {
+    app:"백지 v1",
+    exportedAt: new Date().toISOString(),
+    student: ($("#sid").value.trim() || null),
+    ear: LLM.on ? { type:"llm", model:LLM.model } : { type:"rule" },
+    concepts: CONCEPTS.map(c=>{
+      const st=ST[c.id];
+      const touched = st.history.length>0 || st.tape.length>0;
+      if(!touched) return null;
+      return {
+        concept:c.id, name:c.nm, grade:c.grade,
+        versions: st.history.map(h=>({
+          v:h.v, taught:h.taught,
+          pass:[...h.g.pass], fixed:h.fixed, broke:h.broke,
+          calc:h.g.calc, meaning:h.g.meaning, explain:h.g.explain
+        })),
+        final: st.last ? { calc:st.last.calc, meaning:st.last.meaning,
+                           explain:st.last.explain, total:st.last.total } : null,
+        regressionExperienced: st.history.some(h=>h.broke.length>0),
+        teachCount: st.tape.length,
+        unrecognizedCount: st.tape.filter(t=>(t.added||[]).length===0).length,
+        partialCount: Object.keys(st.partial||{}).length,
+        slots: slotSnapshot(c, st.K),
+        elapsedSec: Math.round((Date.now()-st.t0)/1000)
+      };
+    }).filter(Boolean)
+  };
+}
+$("#expBtn").onclick = ()=>{
+  const data = buildLog();
+  if(!data.concepts.length){ $("#expNote").textContent = "아직 기록이 없습니다."; return; }
+  const blob = new Blob([JSON.stringify(data,null,2)], {type:"application/json"});
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = `baekji_${data.student||"anon"}_${new Date().toISOString().slice(0,10)}.json`;
+  a.click(); URL.revokeObjectURL(a.href);
+  $("#expNote").textContent = `개념 ${data.concepts.length}건 내려받음`;
+};
+
+/* ══════════════════════ 소개 표 ══════════════════════ */
+function renderEngine(){
+  const c=C();
+  $("#engineTitle").innerHTML = `제자의 추론 엔진 <span class="muted" style="font-weight:400;font-size:14px">— ${c.nm}</span>`;
+  $("#engineTable").innerHTML = c.slots.map(s=>
+    `<tr><td><b>${s.nm}</b></td><td>${s.empty}</td><td>${s.affects}</td></tr>`).join("");
+}
+
+/* ══════════════════════ 전환 ══════════════════════ */
+function switchConcept(id){
+  CID=id; const c=C(), st=S();
+  $("#topicName").textContent = c.nm;
+  $("#tin").placeholder = c.ph;
+  $("#tin").value=""; $("#tcount").textContent="0자"; $("#teachBtn").disabled=true;
+  $("#confirmWrap").innerHTML="";
+  renderPicker(); renderSlots(); renderCov(st.last); renderTape(); renderHistory(); renderEngine();
+  if(st.last){
+    $("#examWrap").classList.remove("hide");
+    $("#vlabel").textContent = tw(`v${st.exams} · ${c.nm}`, `${ord(st.exams)} 수업 · ${c.nm}`);
+    $("#examNote").innerHTML = tw(
+      `${kindNm("calc")} 5문항 · ${kindNm("meaning")} 3문항 · ${kindNm("explain")} 2문항. 제자는 자기가 배운 규칙으로만 답합니다.`,
+      `${kindNm("calc")} 5문제 · ${kindNm("meaning")} 3문제 · ${kindNm("explain")} 2문제. 제자는 <b>내가 알려준 것만</b> 써서 풀어요.`);
+    $("#qgrid").innerHTML = st.last.rows.map(r=>`
+      <div class="q in ${r.ok?"pass":"fail"}"><div class="qh"><span class="kind ${r.kind}">${kindNm(r.kind)}</span>
+      <span class="mark">${r.ok?tw("통과","맞았어요"):tw("실패","못 풀었어요")}</span></div>
+      <div class="qq">${r.q}</div><div class="said">${r.said}</div></div>`).join("");
+    const h = st.history[st.history.length-1];
+    renderHeadline(st.last, h.fixed, h.broke);
+    setPupil(st.last.total[0]===10?"happy":"thinking", c.ask(st.K));
+  } else {
+    $("#examWrap").classList.add("hide"); $("#headline").innerHTML="";
+    setPupil("blank", c.hello);
+  }
+  obReset();
+}
+$("#picker").addEventListener("click",e=>{
+  const b=e.target.closest("button[data-c]"); if(!b) return;
+  switchConcept(b.dataset.c); window.scrollTo({top:0});
+});
+$("#nav").addEventListener("click",e=>{
+  const b=e.target.closest("button[data-t]"); if(!b) return;
+  $$("#nav button").forEach(x=>x.setAttribute("aria-selected",String(x.dataset.t===b.dataset.t)));
+  ["class","hist","about"].forEach(k=>$("#tab-"+k).classList.toggle("hide",k!==b.dataset.t));
+  window.scrollTo({top:0});
+});
+function setDensity(d){
+  DEN = d; document.documentElement.setAttribute("data-density", d);
+  $("#denS").setAttribute("aria-pressed", String(d==="student"));
+  $("#denT").setAttribute("aria-pressed", String(d==="teacher"));
+  if(d==="student" && !$("#tab-class").classList.contains("hide")===false){
+    $$("#nav button").forEach(x=>x.setAttribute("aria-selected", String(x.dataset.t==="class")));
+    ["class","hist","about"].forEach(k=>$("#tab-"+k).classList.toggle("hide", k!=="class"));
+  }
+  switchConcept(CID);
+}
+$("#denS").onclick=()=>setDensity("student");
+$("#denT").onclick=()=>setDensity("teacher");
+$("#theme").onclick=()=>document.documentElement.setAttribute("data-theme",
+  document.documentElement.getAttribute("data-theme")==="dark"?"light":"dark");
+$("#reset").onclick=()=>{ ST[CID]=newState(C()); obSeen=false; switchConcept(CID); };
+
+paintUsage();
+switchConcept(CONCEPTS[0].id);
+</script>
+</body>
+</html>
